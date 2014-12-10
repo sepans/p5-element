@@ -1,0 +1,14 @@
+{
+  "name": "p5-element",
+  "version": "0.0.0",
+  "keywords": [
+    "seed",
+    "polymer",
+    "web-components"
+  ],
+  "main": "p5-element.html",
+  "dependencies": {
+    "polymer": "Polymer/polymer#~0.3.5",
+    "p5js": "~0.3.13"
+  }
+}

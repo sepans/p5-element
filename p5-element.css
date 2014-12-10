@@ -1,0 +1,8 @@
+:host {
+  display: block;
+  color: red;
+}
+
+#canvas {
+	border: 1px solid #EEE;
+}

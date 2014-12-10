@@ -1,0 +1,101 @@
+<link rel="import" href="../polymer/polymer.html">
+
+<!--
+Element providing solution to no problem in particular.
+
+##### Example
+
+    <p5-element></p5-element>
+
+@element p5-element
+@blurb Element providing solution to no problem in particular.
+@status alpha
+@homepage http://sepans.github.io/p5-element
+-->
+<polymer-element name="p5-element">
+
+  <template>
+
+    <link rel="stylesheet" href="p5-element.css" />
+
+    <content></content>
+
+    <textarea value="{{setupFunction}}" class="setup-function" placeholder="enter setup function" rows="4">></textarea>
+    <textarea value="{{drawFunction}}" class="draw-function" placeholder="enter draw function" rows="4">></textarea>
+
+
+   
+     <div id="canvas_container"></div>
+
+    
+
+  </template>
+  <script src="../p5js/lib/p5.js"></script>
+
+  <script>
+
+    Polymer('p5-element', {
+     
+      _p5: null,
+      _sketch: {},
+      setupFunction: 'ellipse(50, 50, 80, 80);',
+      observe: {
+        setupFunction: '_setupFunctionChanged',
+        drawFunction: '_drawFunctionChanged'
+      },
+      ready: function() {
+        /*
+        var sketch = function() {
+          setup = function() {
+            createCanvas(200, 200);
+            ellipse(50, 50, 80, 80);
+          }
+          
+
+        }
+        _p5 = new p5(sketch ); //, this.$.canvas_container); //canvas is not compatible with shadowDom
+        console.log(_p5);
+
+        */
+       var self = this;
+       self._createP5();
+      },
+
+      _createP5: function() {
+        var self = this;
+        var setupFunc = new Function(self.setupFunction); 
+        var drawFunc = new Function(self.drawFunction); 
+        self._sketch = function() {
+          setup =  setupFunc;
+          draw =  drawFunc;
+        }
+        console.log(self.sketch);
+        _p5 = new p5(self._sketch , this.$.canvas_container); 
+        console.log(_p5);
+        console.log(_p5._setup);
+
+      },
+      
+      _setupFunctionChanged: function() {
+
+        this._createP5();
+        // var setupFunc = new Function(self.setupFunction); 
+        // _p5._setup = setupFunc;
+
+      },
+
+      _drawFunctionChanged: function() {
+
+        this._createP5();
+
+        // var drawFunc = new Function(self.drawFunction); 
+        // _p5._draw = drawFunc;
+
+      }
+
+
+    });
+
+  </script>
+
+</polymer-element>
