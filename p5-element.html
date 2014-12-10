@@ -19,9 +19,15 @@ Element providing solution to no problem in particular.
     <link rel="stylesheet" href="p5-element.css" />
 
     <content></content>
+    <div class="error setupErr">{{displaySetupErr}}</div>
+    <div class="code">function setup() {</div>
+    <textarea value="{{setupFunction}}" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
+    <div class="code">}</div>
 
-    <textarea value="{{setupFunction}}" class="setup-function" placeholder="enter setup function" rows="4">></textarea>
-    <textarea value="{{drawFunction}}" class="draw-function" placeholder="enter draw function" rows="4">></textarea>
+    <div class="error drawErr">{{displayDrawErr}}</div>
+    <div class="code">function draw() {</div>
+    <textarea value="{{drawFunction}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
+    <div class="code">}</div>
 
 
    
@@ -38,10 +44,15 @@ Element providing solution to no problem in particular.
      
       _p5: null,
       _sketch: {},
-      setupFunction: 'ellipse(50, 50, 80, 80);',
+      setupFunction: '',
+      drawFunction: 'background(255); \nellipse(50, 50, 80, 80);',
+      displaySetupErr: '',
+      displayDrawErr: '',
       observe: {
         setupFunction: '_setupFunctionChanged',
-        drawFunction: '_drawFunctionChanged'
+        drawFunction: '_drawFunctionChanged',
+        setupErr: 'setupErrChanged',
+        drawErr: 'drawErrChanged'
       },
       ready: function() {
         /*
@@ -62,9 +73,31 @@ Element providing solution to no problem in particular.
       },
 
       _createP5: function() {
-        var self = this;
-        var setupFunc = new Function(self.setupFunction); 
-        var drawFunc = new Function(self.drawFunction); 
+        var self = this,
+            setupFunc = null,
+            drawFunc = null;
+
+        try {
+          setupFunc = new Function(self.setupFunction); 
+        }
+        catch(e) {
+          self.setupErr = e.message;//  + ' ' + e.lineNumber;
+          return;
+        }
+        self.setupErr = '';
+
+        try {
+          drawFunc = new Function(self.drawFunction); 
+        }
+        catch(e) {
+          // console.log(e);
+          // console.log(e.toString());
+          // console.log(e.stack);
+          self.drawErr = e.message;// + ' ' + e.lineNumber;
+          return;
+        }
+        self.drawErr = '';
+
         self._sketch = function() {
           setup =  setupFunc;
           draw =  drawFunc;
@@ -91,6 +124,46 @@ Element providing solution to no problem in particular.
         // var drawFunc = new Function(self.drawFunction); 
         // _p5._draw = drawFunc;
 
+      },
+      setupErrChanged: function() {
+        
+        var self = this;
+        if(self.setupErr.length==0) {
+          self.displaySetupErr = '';
+          return;
+
+        }
+
+        clearTimeout(self._setupTimeOut);
+        self._setupTimeOut = setTimeout(function() {
+          if(self.setupErr.length>0) {
+            self.displaySetupErr = self.setupErr;
+          }
+
+        }, 1000);
+      },
+
+      drawErrChanged: function() {
+        
+        var self = this;
+
+        console.log('draw err',self.drawErr, self.drawErr.length);
+
+        if(self.drawErr.length==0) {
+          self.displayDrawErr = '';
+
+          console.log(self.displayDrawErr);
+          return;
+
+        }
+
+        clearTimeout(self._drawTimeOut);
+        self._drawTimeOut = setTimeout(function() {
+          if(self.drawErr.length>0) {
+            self.displayDrawErr = self.drawErr;
+          }
+
+        }, 1000);
       }
 
 

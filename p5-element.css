@@ -1,8 +1,34 @@
 :host {
   display: block;
   color: red;
+  font-family: arial;
 }
 
 #canvas {
 	border: 1px solid #EEE;
 }
+
+.error {
+	color: red;
+	font-size: 12px;
+	height: 15px;
+}
+
+.code {
+
+  font-family: monaco monospace 'courier' 'courier new'  ;
+  font-size: 11px;
+  color: #333;
+
+}
+
+textarea.code {
+	border: 1px solid #e5e5e5;
+	width: 300px;
+  	height: 150px;
+	outline: none !important;
+	margin-left: 10px;
+	resize: both;
+
+}
+
