@@ -44,8 +44,8 @@ Element providing solution to no problem in particular.
      
       _p5: null,
       _sketch: {},
-      setupFunction: '',
-      drawFunction: 'background(255); \nellipse(50, 50, 80, 80);',
+      setupFunction: 'createCanvas(200,200);\n rect(10,10,10,10);',
+      drawFunction: 'rect(20,20,20,20);',
       displaySetupErr: '',
       displayDrawErr: '',
       observe: {
@@ -55,19 +55,7 @@ Element providing solution to no problem in particular.
         drawErr: 'drawErrChanged'
       },
       ready: function() {
-        /*
-        var sketch = function() {
-          setup = function() {
-            createCanvas(200, 200);
-            ellipse(50, 50, 80, 80);
-          }
-          
-
-        }
-        _p5 = new p5(sketch ); //, this.$.canvas_container); //canvas is not compatible with shadowDom
-        console.log(_p5);
-
-        */
+        
        var self = this;
        self._createP5();
       },
@@ -78,7 +66,7 @@ Element providing solution to no problem in particular.
             drawFunc = null;
 
         try {
-          setupFunc = new Function(self.setupFunction); 
+          setupFunc = new Function('with (this) {'+self.setupFunction+'}'); 
         }
         catch(e) {
           self.setupErr = e.message;//  + ' ' + e.lineNumber;
@@ -87,25 +75,28 @@ Element providing solution to no problem in particular.
         self.setupErr = '';
 
         try {
-          drawFunc = new Function(self.drawFunction); 
+
+          drawFunc = new Function('with (this) {'+self.drawFunction+'}'); 
         }
         catch(e) {
-          // console.log(e);
-          // console.log(e.toString());
-          // console.log(e.stack);
           self.drawErr = e.message;// + ' ' + e.lineNumber;
           return;
         }
         self.drawErr = '';
 
-        self._sketch = function() {
-          setup =  setupFunc;
-          draw =  drawFunc;
+        self._sketch = function(sketch) {
+
+          sketch.setup =  setupFunc.bind(sketch);
+          sketch.draw =  drawFunc.bind(sketch);
         }
-        console.log(self.sketch);
-        _p5 = new p5(self._sketch , this.$.canvas_container); 
-        console.log(_p5);
-        console.log(_p5._setup);
+
+        try {
+            self._p5 = new p5(self._sketch, self.$.canvas_container); 
+        }
+        catch(e) {
+          self.drawErr = e.message;// + ' ' + e.lineNumber;
+          return;
+        }
 
       },
       
@@ -147,12 +138,9 @@ Element providing solution to no problem in particular.
         
         var self = this;
 
-        console.log('draw err',self.drawErr, self.drawErr.length);
-
         if(self.drawErr.length==0) {
           self.displayDrawErr = '';
 
-          console.log(self.displayDrawErr);
           return;
 
         }
@@ -163,7 +151,7 @@ Element providing solution to no problem in particular.
             self.displayDrawErr = self.drawErr;
           }
 
-        }, 1000);
+        }, 1500);
       }
 
 
