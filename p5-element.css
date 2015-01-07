@@ -4,6 +4,17 @@
   font-family: arial;
 }
 
+#canvas_container {
+	position: relative;
+}
+
+#defaultCanvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+}
+
+
 #canvas {
 	border: 1px solid #EEE;
 }
@@ -31,4 +42,5 @@ textarea.code {
 	resize: both;
 
 }
+
 
