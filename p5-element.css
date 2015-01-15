@@ -43,4 +43,8 @@ textarea.code {
 
 }
 
+textarea.vars {
+	height: 1.5em;
+}
+
 

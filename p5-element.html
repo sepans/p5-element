@@ -19,6 +19,9 @@ Element providing solution to no problem in particular.
     <link rel="stylesheet" href="p5-element.css" />
 
     <content></content>
+    <div class="code">var </div>
+    <textarea value="{{globalVars}}" class="setup-function code vars" placeholder="" rows="2">></textarea>
+    <div class="code">;</div>
     <div class="error setupErr">{{displaySetupErr}}</div>
     <div class="code">function setup() {</div>
     <textarea value="{{setupFunction}}" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
@@ -44,19 +47,22 @@ Element providing solution to no problem in particular.
      
       _p5: null,
       _sketch: {},
-      setupFunction: 'createCanvas(200,200);\n rect(10,10,10,10);',
-      drawFunction: 'rect(20,20,20,20);',
+      globalVars: 'x= 30, y = 15',
+      setupFunction: 'createCanvas(200,200);\n background(255); \n rect(10,10,10,10);',
+      drawFunction: 'rect(x,5,20,20);',
       displaySetupErr: '',
       displayDrawErr: '',
       observe: {
         setupFunction: '_setupFunctionChanged',
         drawFunction: '_drawFunctionChanged',
+        globalVars: '_globalVarsChanged',
         setupErr: 'setupErrChanged',
-        drawErr: 'drawErrChanged'
+        drawErr: 'drawErrChanged',
       },
       ready: function() {
         
        var self = this;
+       self._globalVarsChanged();
        self._createP5();
       },
 
@@ -84,17 +90,32 @@ Element providing solution to no problem in particular.
         }
         self.drawErr = '';
 
+        console.log(self._globalVarsParsed);
+
         self._sketch = function(sketch) {
+
+          self._globalVarsParsed.forEach(function(item) {
+            console.log(item.name);
+            sketch[item.name] = item.value;
+          });
 
           sketch.setup =  setupFunc.bind(sketch);
           sketch.draw =  drawFunc.bind(sketch);
         }
+
+        // self._globalVarsParsed.forEach(function(item) {
+        //   self._sketch[item.name] = item.value;
+        // });
+
+        console.log(self._sketch);
 
         try {
             self._p5 = new p5(self._sketch, self.$.canvas_container); 
         }
         catch(e) {
           self.drawErr = e.message;// + ' ' + e.lineNumber;
+          self._p5 = null;
+          delete self._p5;
           return;
         }
 
@@ -152,6 +173,22 @@ Element providing solution to no problem in particular.
           }
 
         }, 1500);
+      },
+
+      _globalVarsChanged: function() {
+        var self = this;
+        self._globalVarsParsed = [];
+        var varList = self.globalVars.split(',');
+        self._globalVarsParsed = varList.map(function(item) {
+          var splits = item.split('=');
+          return {
+            name: splits[0],
+            value: splits.length>0 ? splits[1] : 0
+          }
+
+        });
+
+        self._createP5();
       }
 
 
