@@ -49,7 +49,7 @@ Element providing solution to no problem in particular.
       _sketch: {},
       globalVars: 'x= 30, y = 15',
       setupFunction: 'createCanvas(200,200);\n background(255); \n rect(10,10,10,10);',
-      drawFunction: 'rect(x,5,20,20);',
+      drawFunction: ' background(255); \n rect(x,y,20,20); \n /* x++;  y++; */',
       displaySetupErr: '',
       displayDrawErr: '',
       observe: {
@@ -94,6 +94,7 @@ Element providing solution to no problem in particular.
 
         self._sketch = function(sketch) {
 
+          // circular reference?
           self._globalVarsParsed.forEach(function(item) {
             console.log(item.name);
             sketch[item.name] = item.value;
@@ -106,16 +107,19 @@ Element providing solution to no problem in particular.
         // self._globalVarsParsed.forEach(function(item) {
         //   self._sketch[item.name] = item.value;
         // });
-
+        console.log('creating p5');
         console.log(self._sketch);
 
         try {
             self._p5 = new p5(self._sketch, self.$.canvas_container); 
         }
         catch(e) {
+          console.log('error deleting p5');
+          console.log(e.message);
           self.drawErr = e.message;// + ' ' + e.lineNumber;
-          self._p5 = null;
-          delete self._p5;
+          //self._p5.noLoop();
+          self._p5.remove();
+          //self._p5 = null;
           return;
         }
 
@@ -182,7 +186,7 @@ Element providing solution to no problem in particular.
         self._globalVarsParsed = varList.map(function(item) {
           var splits = item.split('=');
           return {
-            name: splits[0],
+            name: splits[0].trim(),
             value: splits.length>0 ? splits[1] : 0
           }
 
