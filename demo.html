@@ -2,6 +2,7 @@
 <html>
 <head>
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <script src="../webcomponentsjs/webcomponents.js"></script>
   <title>p5-element Demo</title>
 
   <link rel="import" href="p5-element.html">
@@ -10,14 +11,33 @@
   		font-family: arial;
   		font-size: 14px;
   	}
+
+    p5-element {
+      vertical-align: top;
+      min-width: 350px;
+    }
   </style>
 
 </head>
 <body unresolved>
 
-  <p>Simple Polymer element for p5.js live coding:</p>
+  <p>Simple Polymer element for p5.js live coding. It allows multiple instances of p5.js run side by side.</p>
 
   <p5-element></p5-element>
+
+  <p5-element id="second"></p5-element>
+  <!--
+  <p5-element globalVars="x=50, y=50" drawFunction="background(255); rect(x,y,30,30);  x+=3;  y+=3;  if(x>width - 30) x = 0;  if(y>height - 30) y = 0; "></p5-element>
+  -->
+
+
+  <script>
+    var secondInstance = document.querySelector('#second');
+
+    secondInstance.globalVars = "x=100, y=100, speedX = 1, speedY = 1";
+
+    secondInstance.drawFunction = "background(255); \nellipse(x,y,10,10); \nx+=speedX; \ny+=speedY; \nif(x>width - 5 || x<5) speedX = -speedX; \nif(y>height - 5 || y<5) speedY = -speedY; ";
+  </script>
 
 </body>
 </html>

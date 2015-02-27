@@ -1,4 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../core-collapse/core-collapse.html">
+
 
 <!--
 Element providing solution to no problem in particular.
@@ -12,28 +14,34 @@ Element providing solution to no problem in particular.
 @status alpha
 @homepage http://sepans.github.io/p5-element
 -->
-<polymer-element name="p5-element">
+<polymer-element name="p5-element" attributes="setupFunction drawFunction globalVars">
 
   <template>
 
     <link rel="stylesheet" href="p5-element.css" />
 
-    <content></content>
-    <div class="code">var </div>
-    <textarea value="{{globalVars}}" class="setup-function code vars" placeholder="" rows="2">></textarea>
-    <div class="code">;</div>
-    <div class="error setupErr">{{displaySetupErr}}</div>
-    <div class="code">function setup() {</div>
-    <textarea value="{{setupFunction}}" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
-    <div class="code">}</div>
-
-    <div class="error drawErr">{{displayDrawErr}}</div>
-    <div class="code">function draw() {</div>
-    <textarea value="{{drawFunction}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
-    <div class="code">}</div>
+    <label class="code-label {{ {open: _codeOpen } | tokenList }}" on-click="{{_toggleCode}}">code:</label>  
 
 
-   
+    <core-collapse opened="true" id="code_collapse">
+
+      <div class="code">var </div>
+      <textarea value="{{globalVars}}" class="setup-function code vars" placeholder="" rows="2">></textarea>
+      <div class="code">;</div>
+      <div class="error setupErr">{{displaySetupErr}}</div>
+      <div class="code">function setup() {</div>
+      <textarea value="{{setupFunction}}" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
+      <div class="code">}</div>
+
+      <div class="error drawErr">{{displayDrawErr}}</div>
+      <div class="code">function draw() {</div>
+      <textarea value="{{drawFunction}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
+      <div class="code">}</div>
+
+    </core-collapse>
+
+
+    <label>canvas:</label>   
      <div id="canvas_container"></div>
 
     
@@ -47,11 +55,12 @@ Element providing solution to no problem in particular.
      
       _p5: null,
       _sketch: {},
-      globalVars: 'x= 30, y = 15',
-      setupFunction: 'createCanvas(200,200);\n background(255); \n rect(10,10,10,10);',
-      drawFunction: ' background(255); \n rect(x,y,20,20); \n /* x++;  y++; */',
+      globalVars: 'x= 15, y = 15',
+      setupFunction: 'createCanvas(300,200);\nbackground(255); \nrect(10,10,10,10);',
+      drawFunction: 'background(255); \nrect(x,y,20,20); \nx++; \ny++; \nif(x>width - 20) x = 0; \nif(y>height - 20) y = 0; ',
       displaySetupErr: '',
       displayDrawErr: '',
+      _codeOpen: true,
       observe: {
         setupFunction: '_setupFunctionChanged',
         drawFunction: '_drawFunctionChanged',
@@ -95,20 +104,28 @@ Element providing solution to no problem in particular.
         self._sketch = function(sketch) {
 
           // circular reference?
+          
           self._globalVarsParsed.forEach(function(item) {
             console.log(item.name);
             sketch[item.name] = item.value;
           });
 
+
           sketch.setup =  setupFunc.bind(sketch);
           sketch.draw =  drawFunc.bind(sketch);
         }
 
-        // self._globalVarsParsed.forEach(function(item) {
-        //   self._sketch[item.name] = item.value;
-        // });
+         self._globalVarsParsed.forEach(function(item) {
+           self._sketch[item.name] = item.value;
+         });
         console.log('creating p5');
         console.log(self._sketch);
+    
+        if(self._p5) {
+          self._p5.remove();
+        }
+        
+
 
         try {
             self._p5 = new p5(self._sketch, self.$.canvas_container); 
@@ -119,6 +136,7 @@ Element providing solution to no problem in particular.
           self.drawErr = e.message;// + ' ' + e.lineNumber;
           //self._p5.noLoop();
           self._p5.remove();
+          delete self._sketch;// = null;
           //self._p5 = null;
           return;
         }
@@ -185,14 +203,22 @@ Element providing solution to no problem in particular.
         var varList = self.globalVars.split(',');
         self._globalVarsParsed = varList.map(function(item) {
           var splits = item.split('=');
+          var value = splits.length>1 ? splits[1] : null;
+          var parsedValue = (!isNaN(parseFloat(value)) && isFinite(value)) ? parseFloat(value) : value;
           return {
             name: splits[0].trim(),
-            value: splits.length>0 ? splits[1] : 0
+            value: parsedValue
           }
 
         });
 
         self._createP5();
+      },
+
+      _toggleCode: function() {
+        console.log('assertion, message');
+        this._codeOpen = !this._codeOpen;
+        this.$.code_collapse.toggle();
       }
 
 

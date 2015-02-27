@@ -9,6 +9,7 @@
   "main": "p5-element.html",
   "dependencies": {
     "polymer": "Polymer/polymer#~0.5.1",
-    "p5js": "~0.3.13"
+    "p5js": "~0.3.13",
+    "core-collapse": "Polymer/core-collapse#~0.5.5"
   }
 }

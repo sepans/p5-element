@@ -1,7 +1,10 @@
 :host {
-  display: block;
+  display: inline-block;
   color: red;
   font-family: arial;
+  font-size: 12px;
+  padding: 10px;
+  min-width: 300px;
 }
 
 #canvas_container {
@@ -12,6 +15,11 @@
 	position: absolute;
 	top: 0;
 	left: 0;
+	border: 1px solid #ED225D;
+	margin-left: 10px;
+	display: block;
+
+
 }
 
 
@@ -34,7 +42,7 @@
 }
 
 textarea.code {
-	border: 1px solid #e5e5e5;
+	border: 1px solid #eaeaea;
 	width: 300px;
   	height: 150px;
 	outline: none !important;
@@ -46,5 +54,33 @@ textarea.code {
 textarea.vars {
 	height: 1.5em;
 }
+
+label {
+	margin: 10px 0;
+	display: inline-block;
+}
+
+.code-label {
+	cursor: pointer;
+}
+
+.code-label::before {
+	content: '+';
+	margin-right: 5px;
+	width: 5px;
+	display: inline-block;
+}
+
+.open::before {
+	content: '-';
+
+}
+
+.code-label {
+	width: 100%;
+	display: block;
+}
+
+
 
 
