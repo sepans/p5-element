@@ -24,5 +24,11 @@ Simply use html tags in your code. It will render the editor with the canvas.
 
     <p5-element></p5-element>
 
+![screenshot](preview.png)
+
+#### Demo:
+
+[Demo](http://sepans.github.io/p5-element/components/p5-element/demo.html)
+
 #### Licencse: 
 [The MIT License (MIT)](http://opensource.org/licenses/MIT)
