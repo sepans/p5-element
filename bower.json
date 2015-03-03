@@ -1,8 +1,9 @@
 {
   "name": "p5-element",
-  "version": "0.0.0",
+  "version": "0.0.1",
   "keywords": [
-    "seed",
+    "p5.js",
+    "processing",
     "polymer",
     "web-components"
   ],

@@ -3,45 +3,91 @@
 
 
 <!--
-Element providing solution to no problem in particular.
+A editor component for p5.js live coding. It also provides encapsulation so you can run different sketches side by side.
 
-##### Example
+#### Installation:
+
+The easiest way to install the component in your page is by using bower because it also handles dipendencies:
+
+    bower install p5-element
+
+(But you can also download the code from github put the unzipped files in your project directory. Make sure you 
+do the same for the dependencies in the bower.json file)
+
+Include the component and webcomponentjs on top of you page:
+
+    <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
+
+    <link rel="import" href="bower_components/p5-element/p5-element.html">
+
+#### Usage:
+
+Simply use html tags in your code. It will render the editor with the canvas.
 
     <p5-element></p5-element>
 
+You can preset the setup/draw function as well as the global variables using element attributes:
+
+    <p5-element globalVars="x=10, y=15" setupFunction="createCanvas(500,500);"></p5-element>
+
+But it might be easier to set them using javascript (to easily handle line breaks etc.):
+
+    <p5-element id="p5js"></p5-element>
+
+    <script>
+     
+      var p5jsElement = document.querySelector('#p5js');
+      p5jsElement.drawFunction = " background(255); \n ellipse(10,10,10,10);"
+
+    </script>
+
+Or remove the code editor completely:
+
+    <p5-element hideEditor="true"></p5-element>
+
+
+
+
+
 @element p5-element
-@blurb Element providing solution to no problem in particular.
+@blurb An editor for p5.js live coding
+@version 0.0.1
 @status alpha
 @homepage http://sepans.github.io/p5-element
 -->
-<polymer-element name="p5-element" attributes="setupFunction drawFunction globalVars">
+<polymer-element name="p5-element" attributes="setupFunction drawFunction globalVars hideEditor">
 
   <template>
 
     <link rel="stylesheet" href="p5-element.css" />
 
-    <label class="code-label {{ {open: _codeOpen } | tokenList }}" on-click="{{_toggleCode}}">code:</label>  
+    <template if="{{!hideEditor}}">
+
+      <label class="code-label {{ {open: _codeOpen } | tokenList }}" on-click="{{toggleCodeSection}}">code:</label>  
 
 
-    <core-collapse opened="true" id="code_collapse">
+      <core-collapse opened="true" id="code_collapse">
 
-      <div class="code">var </div>
-      <textarea value="{{globalVars}}" class="setup-function code vars" placeholder="" rows="2">></textarea>
-      <div class="code">;</div>
-      <div class="error setupErr">{{displaySetupErr}}</div>
-      <div class="code">function setup() {</div>
-      <textarea value="{{setupFunction}}" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
-      <div class="code">}</div>
+        <div class="code">var </div>
+        <textarea value="{{globalVars}}" class="setup-function code vars" placeholder="" rows="2">></textarea>
+        <div class="code">;</div>
+        <div class="error setupErr">{{displaySetupErr}}</div>
+        <div class="code">function setup() {</div>
+        <textarea value="{{setupFunction}}" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
+        <div class="code">}</div>
 
-      <div class="error drawErr">{{displayDrawErr}}</div>
-      <div class="code">function draw() {</div>
-      <textarea value="{{drawFunction}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
-      <div class="code">}</div>
+        <div class="error drawErr">{{displayDrawErr}}</div>
+        <div class="code">function draw() {</div>
+        <textarea value="{{drawFunction}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
+        <div class="code">}</div>
 
-    </core-collapse>
+      </core-collapse>
 
+    </template>
 
-    <label>canvas:</label>   
+    <template if="{{!hideEditor}}">
+      <label>canvas:</label>   
+    </template>
      <div id="canvas_container"></div>
 
     
@@ -55,9 +101,26 @@ Element providing solution to no problem in particular.
      
       _p5: null,
       _sketch: {},
+      /**
+       * Global variables, seperated by comma.
+       * @type {String}
+       */
       globalVars: 'x= 15, y = 15',
+      /**
+       * Setup function for the p5.js component
+       * @type {String}
+       */
       setupFunction: 'createCanvas(300,200);\nbackground(255); \nrect(10,10,10,10);',
+      /**
+       * Draw function for the p5.js component
+       * @type {String}
+       */
       drawFunction: 'background(255); \nrect(x,y,20,20); \nx++; \ny++; \nif(x>width - 20) x = 0; \nif(y>height - 20) y = 0; ',
+      /**
+       * Hide the code block and only display canvas
+       * @type {Boolean}
+       */
+      hideEditor: false,
       displaySetupErr: '',
       displayDrawErr: '',
       _codeOpen: true,
@@ -215,7 +278,7 @@ Element providing solution to no problem in particular.
         self._createP5();
       },
 
-      _toggleCode: function() {
+      toggleCodeSection: function() {
         console.log('assertion, message');
         this._codeOpen = !this._codeOpen;
         this.$.code_collapse.toggle();
