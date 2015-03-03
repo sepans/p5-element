@@ -103,21 +103,25 @@ Or remove the code editor completely:
       _sketch: {},
       /**
        * Global variables, seperated by comma.
+       * 
        * @type {String}
        */
       globalVars: 'x= 15, y = 15',
       /**
        * Setup function for the p5.js component
+       * 
        * @type {String}
        */
       setupFunction: 'createCanvas(300,200);\nbackground(255); \nrect(10,10,10,10);',
       /**
        * Draw function for the p5.js component
+       * 
        * @type {String}
        */
       drawFunction: 'background(255); \nrect(x,y,20,20); \nx++; \ny++; \nif(x>width - 20) x = 0; \nif(y>height - 20) y = 0; ',
       /**
        * Hide the code block and only display canvas
+       * 
        * @type {Boolean}
        */
       hideEditor: false,
@@ -277,7 +281,9 @@ Or remove the code editor completely:
 
         self._createP5();
       },
-
+      /**
+       * Open/Close the code section 
+       */
       toggleCodeSection: function() {
         console.log('assertion, message');
         this._codeOpen = !this._codeOpen;
