@@ -177,9 +177,25 @@ Or remove the code editor completely:
             sketch[item.name] = item.value;
           });
 
+          sketch.setup = function() {
+            try {
+              setupFunc.call(sketch);
+            }
+            catch(e) {
+              self.setupErr = e;
+              return;
+            }
+          }
 
-          sketch.setup =  setupFunc.bind(sketch);
-          sketch.draw =  drawFunc.bind(sketch);
+          sketch.draw = function() {
+            try {
+              drawFunc.call(sketch);
+            } catch(e) {
+              self.drawErr = e;
+              return;
+            }
+          }
+
         }
 
          self._globalVarsParsed.forEach(function(item) {
