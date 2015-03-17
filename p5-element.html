@@ -166,14 +166,14 @@ Or remove the code editor completely:
         }
         self.drawErr = '';
 
-        console.log(self._globalVarsParsed);
+        // console.log(self._globalVarsParsed);
 
         self._sketch = function(sketch) {
 
           // circular reference?
           
           self._globalVarsParsed.forEach(function(item) {
-            console.log(item.name);
+            // console.log(item.name);
             sketch[item.name] = item.value;
           });
 
@@ -201,8 +201,8 @@ Or remove the code editor completely:
          self._globalVarsParsed.forEach(function(item) {
            self._sketch[item.name] = item.value;
          });
-        console.log('creating p5');
-        console.log(self._sketch);
+        // console.log('creating p5');
+        // console.log(self._sketch);
     
         if(self._p5) {
           self._p5.remove();
@@ -242,9 +242,17 @@ Or remove the code editor completely:
         // _p5._draw = drawFunc;
 
       },
-      setupErrChanged: function() {
-        
+      setupErrChanged: function(e) {
+
         var self = this;
+
+        // log error to console
+        if (typeof(e) !== 'undefined' && typeof(e.stack) !== 'undefined') {
+          var lStart = e.stack.indexOf('<anonymous>:') + 12;
+          var errLine = '. Line: ' + e.stack.substr(lStart, 7).split(')')[0];
+          console.log('Setup Error: ' + e.message + errLine);
+        }
+
         if(self.setupErr.length==0) {
           self.displaySetupErr = '';
           return;
@@ -260,9 +268,17 @@ Or remove the code editor completely:
         }, 1000);
       },
 
-      drawErrChanged: function() {
+      drawErrChanged: function(e) {
         
         var self = this;
+
+        // log error to console
+        if (typeof(e) !== 'undefined' && typeof(e.stack) !== 'undefined') {
+          var lStart = e.stack.indexOf('<anonymous>:') + 12;
+          var errLine = '. Line: ' + e.stack.substr(lStart, 7).split(')')[0];
+          console.log('Draw Error: ' + e.message + errLine);
+        }
+
 
         if(self.drawErr.length==0) {
           self.displayDrawErr = '';
