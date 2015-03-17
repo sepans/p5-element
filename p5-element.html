@@ -182,7 +182,7 @@ Or remove the code editor completely:
               setupFunc.call(sketch);
             }
             catch(e) {
-              self.setupErr = e;
+              self.setupErr = self._parseError(e);
               return;
             }
           }
@@ -191,7 +191,7 @@ Or remove the code editor completely:
             try {
               drawFunc.call(sketch);
             } catch(e) {
-              self.drawErr = e;
+              self.drawErr = self._parseError(e);
               return;
             }
           }
@@ -212,6 +212,7 @@ Or remove the code editor completely:
 
         try {
             self._p5 = new p5(self._sketch, self.$.canvas_container); 
+            self._cleanUp();
         }
         catch(e) {
           console.log('error deleting p5');
@@ -219,6 +220,7 @@ Or remove the code editor completely:
           self.drawErr = e.message;// + ' ' + e.lineNumber;
           //self._p5.noLoop();
           self._p5.remove();
+          self._cleanUp();
           delete self._sketch;// = null;
           //self._p5 = null;
           return;
@@ -246,13 +248,6 @@ Or remove the code editor completely:
 
         var self = this;
 
-        // log error to console
-        if (typeof(e) !== 'undefined' && typeof(e.stack) !== 'undefined') {
-          var lStart = e.stack.indexOf('<anonymous>:') + 12;
-          var errLine = '. Line: ' + e.stack.substr(lStart, 7).split(')')[0];
-          console.log('Setup Error: ' + e.message + errLine);
-        }
-
         if(self.setupErr.length==0) {
           self.displaySetupErr = '';
           return;
@@ -272,20 +267,13 @@ Or remove the code editor completely:
         
         var self = this;
 
-        // log error to console
-        if (typeof(e) !== 'undefined' && typeof(e.stack) !== 'undefined') {
-          var lStart = e.stack.indexOf('<anonymous>:') + 12;
-          var errLine = '. Line: ' + e.stack.substr(lStart, 7).split(')')[0];
-          console.log('Draw Error: ' + e.message + errLine);
-        }
-
-
         if(self.drawErr.length==0) {
           self.displayDrawErr = '';
 
           return;
 
         }
+          console.log(self.drawErr);
 
         clearTimeout(self._drawTimeOut);
         self._drawTimeOut = setTimeout(function() {
@@ -293,7 +281,7 @@ Or remove the code editor completely:
             self.displayDrawErr = self.drawErr;
           }
 
-        }, 1500);
+        }, 1000);
       },
 
       _globalVarsChanged: function() {
@@ -320,6 +308,25 @@ Or remove the code editor completely:
         console.log('assertion, message');
         this._codeOpen = !this._codeOpen;
         this.$.code_collapse.toggle();
+      },
+
+      // remove any extra canvases
+      _cleanUp: function() {
+        var self = this;
+
+        // this shouldn't be necessary, but sometimes it is...
+        for (var j = 0; j < self.$.canvas_container.children.length - 1; j++) {
+          self.$.canvas_container.children[j].remove();
+        }
+      },
+
+      // returns the error message and line number
+      _parseError: function(e) {
+        if (typeof(e) !== 'undefined' && typeof(e.stack) !== 'undefined') {
+          var lStart = e.stack.indexOf('<anonymous>:') + 12;
+          var errLine = '. Line: ' + e.stack.substr(lStart, 7).split(')')[0];
+          return e.message + errLine;
+        }
       }
 
 
