@@ -104,25 +104,30 @@ Or remove the code editor completely:
       /**
        * Global variables, seperated by comma.
        * 
+       * @property globalVars
        * @type {String}
        */
       globalVars: 'x= 15, y = 15',
       /**
        * Setup function for the p5.js component
-       * 
+       *
+       * @property setupFunction
        * @type {String}
        */
       setupFunction: 'createCanvas(300,200);\nbackground(255); \nrect(10,10,10,10);',
       /**
        * Draw function for the p5.js component
-       * 
+       *
+       * @property drawFunction
        * @type {String}
        */
       drawFunction: 'background(255); \nrect(x,y,20,20); \nx++; \ny++; \nif(x>width - 20) x = 0; \nif(y>height - 20) y = 0; ',
       /**
        * Hide the code block and only display canvas
-       * 
+       *
+       * @property hideEditor
        * @type {Boolean}
+       * @default false
        */
       hideEditor: false,
       displaySetupErr: '',
