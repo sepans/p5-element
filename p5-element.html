@@ -59,7 +59,10 @@ Or remove the code editor completely:
 
   <template>
 
-    <link rel="stylesheet" href="p5-element.css" />
+    <link rel="stylesheet" href="p5-element.css">
+    <link rel="stylesheet" href="../codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="../codemirror/theme/elegant.css">
+
 
     <template if="{{!hideEditor}}">
 
@@ -69,16 +72,17 @@ Or remove the code editor completely:
       <core-collapse opened="true" id="code_collapse">
 
         <div class="code">var </div>
-        <textarea value="{{globalVars}}" class="setup-function code vars" placeholder="" rows="2">></textarea>
+        <textarea value="{{globalVars}}" id="varText" class="setup-function code vars" placeholder="" rows="2">></textarea>
         <div class="code">;</div>
         <div class="error setupErr">{{displaySetupErr}}</div>
         <div class="code">function setup() {</div>
-        <textarea value="{{setupFunction}}" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
+        <textarea value="{{setupFunction}}" id="setupText" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
+        <div id="setup2"></div>
         <div class="code">}</div>
 
         <div class="error drawErr">{{displayDrawErr}}</div>
         <div class="code">function draw() {</div>
-        <textarea value="{{drawFunction}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
+        <textarea value="{{drawFunction}}" id="drawText" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
         <div class="code">}</div>
 
       </core-collapse>
@@ -94,6 +98,8 @@ Or remove the code editor completely:
 
   </template>
   <script src="../p5js/lib/p5.js"></script>
+  <script src="../codemirror/lib/codemirror.js"></script>
+  <script src="../codemirror/mode/javascript/javascript.js"></script>
 
   <script>
 
@@ -107,21 +113,21 @@ Or remove the code editor completely:
        * @property globalVars
        * @type {String}
        */
-      globalVars: 'x= 15, y = 15',
+      globalVars: 'x= 15,\ny = 15',
       /**
        * Setup function for the p5.js component
        *
        * @property setupFunction
        * @type {String}
        */
-      setupFunction: 'createCanvas(300,200);\nbackground(255); \nrect(10,10,10,10);',
+      setupFunction: 'createCanvas(300,200);\nbackground(255);\nrect(10,10,10,10);',
       /**
        * Draw function for the p5.js component
        *
        * @property drawFunction
        * @type {String}
        */
-      drawFunction: 'background(255); \nrect(x,y,20,20); \nx++; \ny++; \nif(x>width - 20) x = 0; \nif(y>height - 20) y = 0; ',
+      drawFunction: 'background(255);\nrect(x,y,20,20);\nx++;\ny++;\nif(x>width - 20) x = 0;\nif(y>height - 20) y = 0; ',
       /**
        * Hide the code block and only display canvas
        *
@@ -145,6 +151,27 @@ Or remove the code editor completely:
        var self = this;
        self._globalVarsChanged();
        self._createP5();
+
+      },
+
+      domReady: function() {
+        // var myCodeMirror = CodeMirror(this.$.setup2, {
+        //   value: this.setupFunction,
+        //   mode:  "javascript"
+        // });
+        // 
+        var codeMirrorSettings = {
+          mode:  'javascript',
+          lineNumbers: true,
+          theme: 'elegant'
+        };
+
+        var varEditor = CodeMirror.fromTextArea(this.$.varText, codeMirrorSettings);
+
+        var setupEditor = CodeMirror.fromTextArea(this.$.setupText, codeMirrorSettings);
+
+        var drawEditor = CodeMirror.fromTextArea(this.$.drawText, codeMirrorSettings);
+
       },
 
       _createP5: function() {

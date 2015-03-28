@@ -36,7 +36,7 @@
 .code {
 
   font-family: monaco monospace 'courier' 'courier new'  ;
-  font-size: 11px;
+  font-size: 12px;
   color: #333;
 
 }
@@ -49,6 +49,10 @@ textarea.code {
 	margin-left: 10px;
 	resize: both;
 
+}
+
+.CodeMirror {
+	height: auto !important;
 }
 
 textarea.vars {

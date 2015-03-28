@@ -11,6 +11,7 @@
   "dependencies": {
     "polymer": "Polymer/polymer#~0.5.1",
     "p5js": "~0.3.13",
-    "core-collapse": "Polymer/core-collapse#~0.5.5"
+    "core-collapse": "Polymer/core-collapse#~0.5.5",
+    "codemirror": "~5.1.0"
   }
 }

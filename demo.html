@@ -34,7 +34,7 @@
   <script>
     var secondInstance = document.querySelector('#second');
 
-    secondInstance.globalVars = "x=100, y=100, speedX = 1, speedY = 1";
+    secondInstance.globalVars = "x=100,\ny=100,\nspeedX = 1,\nspeedY = 1";
 
     secondInstance.drawFunction = "background(255); \nellipse(x,y,10,10); \nx+=speedX; \ny+=speedY; \nif(x>width - 5 || x<5) speedX = -speedX; \nif(y>height - 5 || y<5) speedY = -speedY; ";
   </script>
