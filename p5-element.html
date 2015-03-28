@@ -120,7 +120,7 @@ Or remove the code editor completely:
        * @property setupFunction
        * @type {String}
        */
-      setupFunction: 'createCanvas(300,200);\nbackground(255);\nrect(10,10,10,10);',
+      setupFunction: 'createCanvas(300,200);',
       /**
        * Draw function for the p5.js component
        *
@@ -155,22 +155,31 @@ Or remove the code editor completely:
       },
 
       domReady: function() {
-        // var myCodeMirror = CodeMirror(this.$.setup2, {
-        //   value: this.setupFunction,
-        //   mode:  "javascript"
-        // });
-        // 
         var codeMirrorSettings = {
           mode:  'javascript',
           lineNumbers: true,
           theme: 'elegant'
         };
 
-        var varEditor = CodeMirror.fromTextArea(this.$.varText, codeMirrorSettings);
+        //setting up editors
+        this.varEditor = CodeMirror.fromTextArea(this.$.varText, codeMirrorSettings);
+        this.setupEditor = CodeMirror.fromTextArea(this.$.setupText, codeMirrorSettings);
+        this.drawEditor = CodeMirror.fromTextArea(this.$.drawText, codeMirrorSettings);
 
-        var setupEditor = CodeMirror.fromTextArea(this.$.setupText, codeMirrorSettings);
+        this.varEditor.on('change', function() {
+          this.globalVars = this.varEditor.getValue();
+          this._globalVarsChanged.bind(this);
+        }.bind(this));
 
-        var drawEditor = CodeMirror.fromTextArea(this.$.drawText, codeMirrorSettings);
+        this.setupEditor.on('change', function() {
+          this.setupFunction = this.setupEditor.getValue();
+          this._setupFunctionChanged.bind(this);
+        }.bind(this));
+
+        this.drawEditor.on('change', function() {
+          this.drawFunction = this.drawEditor.getValue();
+          this._drawFunctionChanged.bind(this);
+        }.bind(this));
 
       },
 
@@ -259,17 +268,12 @@ Or remove the code editor completely:
       _setupFunctionChanged: function() {
 
         this._createP5();
-        // var setupFunc = new Function(self.setupFunction); 
-        // _p5._setup = setupFunc;
 
       },
 
       _drawFunctionChanged: function() {
 
         this._createP5();
-
-        // var drawFunc = new Function(self.drawFunction); 
-        // _p5._draw = drawFunc;
 
       },
       setupErrChanged: function(e) {
