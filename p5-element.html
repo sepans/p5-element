@@ -106,7 +106,7 @@ Or remove the code editor completely:
     Polymer('p5-element', {
      
       _p5: null,
-      _sketch: {},
+      //_sketch: {},
       /**
        * Global variables, seperated by comma.
        * 
@@ -150,7 +150,7 @@ Or remove the code editor completely:
         
        var self = this;
        self._globalVarsChanged();
-       self._createP5();
+       //self._createP5();
 
       },
 
@@ -184,6 +184,7 @@ Or remove the code editor completely:
       },
 
       _createP5: function() {
+        console.log('create p5');
         var self = this,
             setupFunc = null,
             drawFunc = null;
@@ -192,6 +193,7 @@ Or remove the code editor completely:
           setupFunc = new Function('with (this) {'+self.setupFunction+'}'); 
         }
         catch(e) {
+          console.log('setup error');
           self.setupErr = e.message;//  + ' ' + e.lineNumber;
           return;
         }
@@ -202,13 +204,77 @@ Or remove the code editor completely:
           drawFunc = new Function('with (this) {'+self.drawFunction+'}'); 
         }
         catch(e) {
+          console.log('setup error');
           self.drawErr = e.message;// + ' ' + e.lineNumber;
           return;
         }
         self.drawErr = '';
 
 
-        self._sketch = function(sketch) {
+        var newSketch = this._createSketch(setupFunc, drawFunc);
+        //console.log('SKETCH ', newSketch);
+    
+        // if(self._p5) {
+        //   self._p5.remove();
+        // }
+        
+
+            try {
+                self._p5 = new p5(newSketch, self.$.canvas_container); 
+                self._cleanUp();
+            }
+            catch(e) {
+              console.log('!!!! error deleting p5');
+              console.log(e.message);
+              self.drawErr = e.message;// + ' ' + e.lineNumber;
+              self._p5.remove();
+              self._cleanUp();
+              return;
+            }
+
+
+
+        //setTimeout(function() {
+          
+          if(self.setupErr.length===0 && self.drawErr.length===0)
+          {
+
+            console.log('AFTER CATCH');
+
+
+
+
+            self.lastRunningSetup = setupFunc;
+            self.lastRunningDraw = drawFunc;
+
+            console.log('RUNNINGS ', self.lastRunningDraw, self.lastRunningSetup);
+          }
+          else {
+
+            console.log('ERROR !!! NEW NEW',  self.lastRunningDraw, self.lastRunningSetup);
+            var newSketch = self._createSketch(self.lastRunningSetup, self.lastRunningDraw);
+            self._p5 = new p5(newSketch, self.$.canvas_container);
+
+            //self._p5.loop();
+
+
+          }
+
+          //}.bind(self),1);
+
+
+
+      },
+
+      _createSketch: function(_setupFunc, _drawFunc) {
+
+        var self = this;
+        var mysketch = null;
+
+        console.log('CREATE SKETCH')
+
+
+        mysketch = function(sketch) {
 
           // circular reference?
           
@@ -218,51 +284,36 @@ Or remove the code editor completely:
 
           sketch.setup = function() {
             try {
-              setupFunc.call(sketch);
+              console.log('SETUP', _setupFunc);
+              _setupFunc.call(sketch);
             }
             catch(e) {
+              console.log('setup call error');
               self.setupErr = self._parseError(e);
-              return;
+
+              self._p5.noLoop();
+
             }
-          }
+          };
 
           sketch.draw = function() {
             try {
-              drawFunc.call(sketch);
+              //console.log(drawFunc);
+              _drawFunc.call(sketch);
             } catch(e) {
+              console.log('draw call error');
               self.drawErr = self._parseError(e);
-              return;
+
+              //throw "sepand";
+
+              self._p5.noLoop();
+
             }
-          }
+          };
 
         }
 
-         self._globalVarsParsed.forEach(function(item) {
-           self._sketch[item.name] = item.value;
-         });
-    
-        if(self._p5) {
-          self._p5.remove();
-        }
-        
-
-
-        try {
-            self._p5 = new p5(self._sketch, self.$.canvas_container); 
-            self._cleanUp();
-        }
-        catch(e) {
-          console.log('error deleting p5');
-          console.log(e.message);
-          self.drawErr = e.message;// + ' ' + e.lineNumber;
-          //self._p5.noLoop();
-          self._p5.remove();
-          self._cleanUp();
-          delete self._sketch;// = null;
-          //self._p5 = null;
-          return;
-        }
-
+        return mysketch;
       },
       
       _setupFunctionChanged: function() {
