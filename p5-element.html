@@ -139,6 +139,7 @@ Or remove the code editor completely:
       displaySetupErr: '',
       displayDrawErr: '',
       _codeOpen: true,
+      _currentVars: [],
       observe: {
         setupFunction: '_setupFunctionChanged',
         drawFunction: '_drawFunctionChanged',
@@ -213,6 +214,7 @@ Or remove the code editor completely:
 
         try {
             self._p5 = new p5(newSketch, self.$.canvas_container); 
+            self._sketch = newSketch;
             self._cleanUp();
         }
         catch(e) {
@@ -232,40 +234,61 @@ Or remove the code editor completely:
         var self = this;
         var mysketch = null;
 
+        //console.log('self._p5 ',self._p5, self._sketch);
 
-        mysketch = function(sketch) {
+        if(self._sketch) {
+
+          self._globalVarsParsed.forEach(function(item) {
+            console.log(item.name,   self.getVarValue(item.name));
+            self._currentVars[item.name] = self.getVarValue(item.name);
+          });
+        }
+
+
+
+        mysketch = function(s) {
 
           // circular reference?
+          console.log(this);
           
-          self._globalVarsParsed.forEach(function(item) {
-            sketch[item.name] = item.value;
-          });
+          this._globalVarsParsed.forEach(function(item) {
+            s[item.name] =  this._currentVars[item.name] ? this._currentVars[item.name]  : item.value;
+          }.bind(this));
 
-          sketch.setup = function() {
+          s.setup = function() {
             try {
-              _setupFunc.call(sketch);
+              _setupFunc.call(s);
             }
             catch(e) {
-              self.setupErr = self._parseError(e);
+              this.setupErr = this._parseError(e);
 
-              self._p5.noLoop();
+              this._p5.noLoop();
 
             }
           };
 
-          sketch.draw = function() {
+          s.draw = function() {
             try {
-              _drawFunc.call(sketch);
+              _drawFunc.call(s);
             } catch(e) {
 
-              self.drawErr = self._parseError(e);
+              this.drawErr = this._parseError(e);
 
-              self._p5.noLoop();
+              this._p5.noLoop();
 
             }
           };
 
-        }
+
+          this.getVarValue = function(varName) {
+             return s[varName];
+          }
+          
+          //return {getVarValue: getVarValue};
+
+        }.bind(this);
+
+        //console.log(mysketch);
 
         return mysketch;
       },
