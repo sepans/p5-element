@@ -27,6 +27,7 @@
 	color: #ED225D;
 	border-radius: 0;
 	background-color: #FFF;
+	float: right;
 }
 
 html /deep/ paper-dialog a {

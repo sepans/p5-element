@@ -68,7 +68,6 @@ Or remove the code editor completely:
 
 
     <template if="{{!hideEditor}}">
-      <button class="btn" on-click="{{_saveGist}}">save to gist</button>
       <github-element id="github"></github-element>
 
       <label class="code-label {{ {open: _codeOpen } | tokenList }}" on-click="{{toggleCodeSection}}">code:</label>  
@@ -76,6 +75,7 @@ Or remove the code editor completely:
 
       <core-collapse opened="true" id="code_collapse">
 
+        <button class="btn" on-click="{{_saveGist}}">save as gist</button>
         <div class="code">var </div>
         <textarea value="{{globalVars}}" id="varText" class="setup-function code vars" placeholder="" rows="2">></textarea>
         <div class="code">;</div>
