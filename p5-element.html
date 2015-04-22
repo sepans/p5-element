@@ -234,12 +234,10 @@ Or remove the code editor completely:
         var self = this;
         var mysketch = null;
 
-        //console.log('self._p5 ',self._p5, self._sketch);
-
+        // if self._sketch exists backup the globar vars
         if(self._sketch) {
 
           self._globalVarsParsed.forEach(function(item) {
-            console.log(item.name,   self.getVarValue(item.name));
             self._currentVars[item.name] = self.getVarValue(item.name);
           });
         }
@@ -248,9 +246,7 @@ Or remove the code editor completely:
 
         mysketch = function(s) {
 
-          // circular reference?
-          console.log(this);
-          
+          // set global vars to backed up values if exist, otherwise initial values          
           this._globalVarsParsed.forEach(function(item) {
             s[item.name] =  this._currentVars[item.name] ? this._currentVars[item.name]  : item.value;
           }.bind(this));
@@ -265,7 +261,7 @@ Or remove the code editor completely:
               this._p5.noLoop();
 
             }
-          };
+          }.bind(this);
 
           s.draw = function() {
             try {
@@ -277,18 +273,16 @@ Or remove the code editor completely:
               this._p5.noLoop();
 
             }
-          };
+          }.bind(this);
 
 
           this.getVarValue = function(varName) {
              return s[varName];
           }
           
-          //return {getVarValue: getVarValue};
 
         }.bind(this);
 
-        //console.log(mysketch);
 
         return mysketch;
       },
