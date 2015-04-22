@@ -150,8 +150,8 @@ Or remove the code editor completely:
       ready: function() {
         
        var self = this;
+       //globalVarsChanged method calls createP5 function in the end.
        self._globalVarsChanged();
-       //self._createP5();
 
       },
 
@@ -340,6 +340,11 @@ Or remove the code editor completely:
       _globalVarsChanged: function() {
         var self = this;
         self._globalVarsParsed = [];
+        
+        // reset currentVars //TODO make it smarter!
+        self._currentVars = [];
+        self._sketch = null;
+
         var varList = self.globalVars.split(',');
         self._globalVarsParsed = varList.map(function(item) {
           var splits = item.split('=');
