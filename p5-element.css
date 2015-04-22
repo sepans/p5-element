@@ -30,8 +30,15 @@
 	float: right;
 }
 
-html /deep/ paper-dialog a {
+#dialog  a {
 	color: #333;
+}
+
+#dialog  a.btn {
+	color: #333;
+	border: 1px solid #333;
+	padding: 3px;
+	margin-right: 20px;
 }
 
 

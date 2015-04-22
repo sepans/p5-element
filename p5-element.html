@@ -75,7 +75,7 @@ Or remove the code editor completely:
 
       <core-collapse opened="true" id="code_collapse">
 
-        <button class="btn" on-click="{{_saveGist}}">save as gist</button>
+        <button class="btn" on-click="{{_gistLogin}}">save as gist</button>
         <div class="code">var </div>
         <textarea value="{{globalVars}}" id="varText" class="setup-function code vars" placeholder="" rows="2">></textarea>
         <div class="code">;</div>
@@ -93,6 +93,15 @@ Or remove the code editor completely:
       </core-collapse>
 
       <paper-dialog id="dialog">
+        <template if="{{_dialogMessage===1}}">
+          <p>Do you want to publish gist under your account using a github token or post it anonimously?</p>
+          <a href="#" style="margin-right: 50%" on-click="{{_loginGist}}">Using Github Token</a>
+          <a href="#" style="btn" on-click="{{_saveGist}}">Anonymous</a>
+
+        </template>
+        <div id="dialogmsg">
+
+        </div>
         
       </paper-dialog>
 
@@ -192,15 +201,14 @@ Or remove the code editor completely:
         }.bind(this));
 
         this.$.github.addEventListener('github-toast', function(e) {
-          console.log(e.detail)
-          //alert(e.detail);
           this._message = e.detail;
-          console.log(this._message);
-          this.$.dialog.innerHTML = e.detail;
-          this.$.dialog.querySelector('a').setAttribute('target', '_blank');
+          this._dialogMessage = 2;
+          this.$.dialogmsg.innerHTML = e.detail;
+          this.$.dialogmsg.querySelector('a').setAttribute('target', '_blank');
           this.$.dialog.open();
 
         }.bind(this));
+
 
       },
 
@@ -406,7 +414,27 @@ Or remove the code editor completely:
         }
       },
 
-      _saveGist: function() {
+      _gistLogin: function() {
+        this._dialogMessage = 1;
+        this.$.dialogmsg.innerHTML = '';
+        this.$.dialog.open();
+
+      },
+
+      _loginGist: function() {
+
+        this.$.dialog.close();
+
+        if(!this.$.github.token) {
+          this.$.github.signIn();
+        }
+        else {
+          this._saveGist(true);
+        }
+
+      },
+
+      _saveGist: function(loggedIn) {
         var gistContent = 'var ' +
             this.varEditor.getValue() + ';\n' +
             'function setup() {\n' +
@@ -414,23 +442,15 @@ Or remove the code editor completely:
             'function draw() {\n' +
             this.drawEditor.getValue() + '\n}\n';
 
-        var callback = this._showGistInfo;
 
         this.$.github.save('p5-element code', true, {
           'p5.js': {
             content: gistContent
-          },
-          callback
+          }
         });
 
-      },
-
-      _showGistInfo: function(response) {
-        console.log('callabck');
-
-        console.log(response);
-
       }
+
 
 
     });
