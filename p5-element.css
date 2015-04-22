@@ -22,6 +22,17 @@
 
 }
 
+.btn {
+	border: 1px solid #ED225D;
+	color: #ED225D;
+	border-radius: 0;
+	background-color: #FFF;
+}
+
+html /deep/ paper-dialog a {
+	color: #333;
+}
+
 
 #canvas {
 	border: 1px solid #EEE;

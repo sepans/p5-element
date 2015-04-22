@@ -1,5 +1,6 @@
 <link rel="import" href="../polymer/polymer.html">
 <link rel="import" href="../core-collapse/core-collapse.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
 
 <link rel="import" href="../github-elements/github-elements.html">
 
@@ -67,7 +68,7 @@ Or remove the code editor completely:
 
 
     <template if="{{!hideEditor}}">
-      <button on-click="{{_saveGist}}">save to gist</button>
+      <button class="btn" on-click="{{_saveGist}}">save to gist</button>
       <github-element id="github"></github-element>
 
       <label class="code-label {{ {open: _codeOpen } | tokenList }}" on-click="{{toggleCodeSection}}">code:</label>  
@@ -90,6 +91,10 @@ Or remove the code editor completely:
         <div class="code">}</div>
 
       </core-collapse>
+
+      <paper-dialog id="dialog">
+        
+      </paper-dialog>
 
     </template>
 
@@ -188,9 +193,14 @@ Or remove the code editor completely:
 
         this.$.github.addEventListener('github-toast', function(e) {
           console.log(e.detail)
-          alert(e.detail);
+          //alert(e.detail);
+          this._message = e.detail;
+          console.log(this._message);
+          this.$.dialog.innerHTML = e.detail;
+          this.$.dialog.querySelector('a').setAttribute('target', '_blank');
+          this.$.dialog.open();
 
-        })
+        }.bind(this));
 
       },
 
