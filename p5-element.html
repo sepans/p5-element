@@ -86,10 +86,10 @@ Or remove the code editor completely:
         <div class="error drawErr">{{displayDrawErr}}</div>
         <textarea value="{{drawFunction | addDrawDisplayFn}}" id="drawText" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
 
-        {{_moreFunctions}}
-        <template repeat="{{function, index in _moreFunctions}}"
+        
+        <template repeat="{{function, index in _moreFunctions}}">
 
-          <div class="error drawErr">{{function.errDisplay}}</div>
+          <div class="error">{{function.errDisplay}}</div>
           <textarea value="{{function.content | addDisplayFn}}" id="function-{{index}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
         </template>
 
@@ -174,6 +174,7 @@ Or remove the code editor completely:
         globalVars: '_globalVarsChanged',
         setupErr: 'setupErrChanged',
         drawErr: 'drawErrChanged',
+        //_moreFunctions: 
       },
 
       _codeMirrorSettings: {
@@ -193,9 +194,9 @@ Or remove the code editor completely:
       domReady: function() {
 
         //setting up editors
-        this.varEditor = CodeMirror.fromTextArea(this.$.varText, this.codeMirrorSettings);
-        this.setupEditor = CodeMirror.fromTextArea(this.$.setupText, this.codeMirrorSettings);
-        this.drawEditor = CodeMirror.fromTextArea(this.$.drawText, this.codeMirrorSettings);
+        this.varEditor = CodeMirror.fromTextArea(this.$.varText, this._codeMirrorSettings);
+        this.setupEditor = CodeMirror.fromTextArea(this.$.setupText, this._codeMirrorSettings);
+        this.drawEditor = CodeMirror.fromTextArea(this.$.drawText, this._codeMirrorSettings);
 
         //this.setupEditor.reindent();
         //this.drawEditor.reindent();
@@ -209,12 +210,12 @@ Or remove the code editor completely:
 
         this.setupEditor.on('change', function() {
           this.setupFunction = this.setupEditor.getValue();
-          this._setupFunctionChanged.bind(this);
+          //this._setupFunctionChanged.bind(this);
         }.bind(this));
 
         this.drawEditor.on('change', function() {
           this.drawFunction = this.drawEditor.getValue();
-          this._drawFunctionChanged.bind(this);
+          //this._drawFunctionChanged.bind(this);
         }.bind(this));
 
 
@@ -274,21 +275,27 @@ Or remove the code editor completely:
 
         console.log('self._moreFunctions',self._moreFunctions);
 
-        if(self._moreFunctions.length>0) {
+        self._moreFunctions.forEach(function(func) {
 
           try {
+            console.log('func content ',func.content);
 
-            var anotherFunction = new Function('with (this) {'+self._moreFunctions[0]+'}'); 
-            console.log('anotherFunction', anotherFunction);
+            var contentWithoutName = func.content.substring('function newfunction() {\n'.length, func.content.length-3);
+            console.log('contentWithoutName '+contentWithoutName);
+
+            func.parsedFunc = new Function('with (this) {'+contentWithoutName+'}'); 
+            //console.log('anotherFunction', anotherFunction);
           }
           catch(e) {
-            self.drawErr = e.message;// + ' ' + e.lineNumber;
+            console.log('error ',func.name, e);
+            //self.drawErr = e.message;// + ' ' + e.lineNumber;
             return;
           }
-        }
+
+        });
 
 
-        var newSketch = this._createSketch(setupFunc, drawFunc, anotherFunction);
+        var newSketch = this._createSketch(setupFunc, drawFunc);
         
 
         try {
@@ -308,7 +315,7 @@ Or remove the code editor completely:
 
       },
 
-      _createSketch: function(_setupFunc, _drawFunc, anotherFunction) {
+      _createSketch: function(_setupFunc, _drawFunc) {
 
         var self = this;
         var mysketch = null;
@@ -354,19 +361,20 @@ Or remove the code editor completely:
             }
           }.bind(this);
 
-          if(anotherFunction) {
-            s.anotherFunction = function() {
+          //console.log('more functions....');
+
+          self._moreFunctions.forEach(function(func) {
+            s[func.name] = function() {
   
               try {
-                console.log('calling another');
-                anotherFunction.call(s);
+                func.parsedFunc.call(s);
               } catch(e) {
-                console.log(e);
+                console.log('error', e);
               }
 
             }
 
-          }
+          });
 
 
           this.getVarValue = function(varName) {
@@ -375,6 +383,8 @@ Or remove the code editor completely:
           
 
         }.bind(this);
+
+        //console.log('mysketch', mysketch);
 
 
         return mysketch;
@@ -502,7 +512,8 @@ Or remove the code editor completely:
       _addFunction: function() {
 
         var newFunction = {
-          content: ''
+          name: 'newfunction',
+          content: 'console.log(",");'
         }
 
         this._moreFunctions.push(newFunction);
@@ -515,7 +526,17 @@ Or remove the code editor completely:
           newFunction.dom = this.shadowRoot.querySelector(elId);
           console.log(elId, newFunction.dom);
 
-           newFunction.codeEditor = CodeMirror.fromTextArea(newFunction.dom, this.codeMirrorSettings);
+           newFunction.codeEditor = CodeMirror.fromTextArea(newFunction.dom, this._codeMirrorSettings);
+
+          newFunction.codeEditor.on('change', function() {
+            console.log('NEW FUNCTION CHANGED');
+            newFunction.content = newFunction.codeEditor.getValue();
+            //console.log('content', newFunction.content);
+            //console.log(this, this._setupFunctionChanged);
+
+            this._setupFunctionChanged();
+          }.bind(this));
+
 
         }.bind(this),200);
 
