@@ -460,11 +460,9 @@ Or remove the code editor completely:
 
       _saveGist: function(loggedIn) {
         var gistContent = 'var ' +
-            this.varEditor.getValue() + ';\n' +
-            'function setup() {\n' +
-            this.setupEditor.getValue() + '\n}\n' +
-            'function draw() {\n' +
-            this.drawEditor.getValue() + '\n}\n';
+            this.varEditor.getValue() + ';\n\n' +
+            this.setupEditor.getValue() + '\n\n' +
+            this.drawEditor.getValue() + '\n\n';
 
 
         this.$.github.save('p5-element code', true, {
