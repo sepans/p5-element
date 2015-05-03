@@ -86,6 +86,15 @@ Or remove the code editor completely:
         <div class="error drawErr">{{displayDrawErr}}</div>
         <textarea value="{{drawFunction | addDrawDisplayFn}}" id="drawText" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
 
+        {{_moreFunctions}}
+        <template repeat="{{function, index in _moreFunctions}}"
+
+          <div class="error drawErr">{{function.errDisplay}}</div>
+          <textarea value="{{function.content | addDisplayFn}}" id="function-{{index}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
+        </template>
+
+        <button class="btn" on-click="{{_addFunction}}">add function</button>
+
       </core-collapse>
 
       <paper-dialog id="dialog">
@@ -158,6 +167,7 @@ Or remove the code editor completely:
       displayDrawErr: '',
       _codeOpen: true,
       _currentVars: [],
+      _moreFunctions: [],
       observe: {
         setupFunction: '_setupFunctionChanged',
         drawFunction: '_drawFunctionChanged',
@@ -165,6 +175,13 @@ Or remove the code editor completely:
         setupErr: 'setupErrChanged',
         drawErr: 'drawErrChanged',
       },
+
+      _codeMirrorSettings: {
+        mode:  'javascript',
+        lineNumbers: true,
+        theme: 'elegant'
+      },
+
       ready: function() {
         
        var self = this;
@@ -174,16 +191,11 @@ Or remove the code editor completely:
       },
 
       domReady: function() {
-        var codeMirrorSettings = {
-          mode:  'javascript',
-          lineNumbers: true,
-          theme: 'elegant'
-        };
 
         //setting up editors
-        this.varEditor = CodeMirror.fromTextArea(this.$.varText, codeMirrorSettings);
-        this.setupEditor = CodeMirror.fromTextArea(this.$.setupText, codeMirrorSettings);
-        this.drawEditor = CodeMirror.fromTextArea(this.$.drawText, codeMirrorSettings);
+        this.varEditor = CodeMirror.fromTextArea(this.$.varText, this.codeMirrorSettings);
+        this.setupEditor = CodeMirror.fromTextArea(this.$.setupText, this.codeMirrorSettings);
+        this.drawEditor = CodeMirror.fromTextArea(this.$.drawText, this.codeMirrorSettings);
 
         //this.setupEditor.reindent();
         //this.drawEditor.reindent();
@@ -260,8 +272,23 @@ Or remove the code editor completely:
         }
         self.drawErr = '';
 
+        console.log('self._moreFunctions',self._moreFunctions);
 
-        var newSketch = this._createSketch(setupFunc, drawFunc);
+        if(self._moreFunctions.length>0) {
+
+          try {
+
+            var anotherFunction = new Function('with (this) {'+self._moreFunctions[0]+'}'); 
+            console.log('anotherFunction', anotherFunction);
+          }
+          catch(e) {
+            self.drawErr = e.message;// + ' ' + e.lineNumber;
+            return;
+          }
+        }
+
+
+        var newSketch = this._createSketch(setupFunc, drawFunc, anotherFunction);
         
 
         try {
@@ -281,7 +308,7 @@ Or remove the code editor completely:
 
       },
 
-      _createSketch: function(_setupFunc, _drawFunc) {
+      _createSketch: function(_setupFunc, _drawFunc, anotherFunction) {
 
         var self = this;
         var mysketch = null;
@@ -326,6 +353,20 @@ Or remove the code editor completely:
 
             }
           }.bind(this);
+
+          if(anotherFunction) {
+            s.anotherFunction = function() {
+  
+              try {
+                console.log('calling another');
+                anotherFunction.call(s);
+              } catch(e) {
+                console.log(e);
+              }
+
+            }
+
+          }
 
 
           this.getVarValue = function(varName) {
@@ -458,6 +499,32 @@ Or remove the code editor completely:
 
       },
 
+      _addFunction: function() {
+
+        var newFunction = {
+          content: ''
+        }
+
+        this._moreFunctions.push(newFunction);
+
+        Polymer.flush();
+        setTimeout(function() {
+          var elId = '#function-'+(this._moreFunctions.length-1).toString();
+          console.log(this._moreFunctions, elId);
+
+          newFunction.dom = this.shadowRoot.querySelector(elId);
+          console.log(elId, newFunction.dom);
+
+           newFunction.codeEditor = CodeMirror.fromTextArea(newFunction.dom, this.codeMirrorSettings);
+
+        }.bind(this),200);
+
+
+        
+        //this._createP5();
+
+      },
+
       _saveGist: function(loggedIn) {
         var gistContent = 'var ' +
             this.varEditor.getValue() + ';\n\n' +
@@ -475,6 +542,10 @@ Or remove the code editor completely:
 
       addSetupDisplayFn: function(text) {
         return this._displaySetupFnPrefix + text + '\n}'; 
+      },
+
+      addDisplayFn: function(text) {
+        return 'function newfunction() {\n' + text + '\n}'; 
       },
 
       addDrawDisplayFn: function(text) {
