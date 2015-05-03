@@ -13,6 +13,7 @@
     "p5js": "~0.3.13",
     "core-collapse": "Polymer/core-collapse#~0.5.5",
     "codemirror": "~5.1.0",
+    "codemirror-31": "codemirror/codemirror#v3.1",
     "github-elements": "PolymerLabs/github-elements#~0.5.0",
     "paper-dialog": "Polymer/paper-dialog#~0.5.5"
   }

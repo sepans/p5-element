@@ -80,15 +80,11 @@ Or remove the code editor completely:
         <textarea value="{{globalVars}}" id="varText" class="setup-function code vars" placeholder="" rows="2">></textarea>
         <div class="code">;</div>
         <div class="error setupErr">{{displaySetupErr}}</div>
-        <div class="code">function setup() {</div>
-        <textarea value="{{setupFunction}}" id="setupText" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
+        <textarea value="{{setupFunction | addSetupDisplayFn}}" id="setupText" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
         <div id="setup2"></div>
-        <div class="code">}</div>
 
         <div class="error drawErr">{{displayDrawErr}}</div>
-        <div class="code">function draw() {</div>
-        <textarea value="{{drawFunction}}" id="drawText" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
-        <div class="code">}</div>
+        <textarea value="{{drawFunction | addDrawDisplayFn}}" id="drawText" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
 
       </core-collapse>
 
@@ -118,6 +114,7 @@ Or remove the code editor completely:
   <script src="../p5js/lib/p5.js"></script>
   <script src="../codemirror/lib/codemirror.js"></script>
   <script src="../codemirror/mode/javascript/javascript.js"></script>
+  <script src="../codemirror-31/addon/format/formatting.js"></script>
 
   <script>
 
@@ -138,14 +135,14 @@ Or remove the code editor completely:
        * @property setupFunction
        * @type {String}
        */
-      setupFunction: 'createCanvas(300,200);',
+      setupFunction: 'createCanvas(300, 200);',
       /**
        * Draw function for the p5.js component
        *
        * @property drawFunction
        * @type {String}
        */
-      drawFunction: 'background(255);\nrect(x,y,20,20);\nx++;\ny++;\nif(x>width - 20) x = 0;\nif(y>height - 20) y = 0; ',
+      drawFunction: 'background(255);\nrect(x, y, 20, 20);\nx++;\ny++;\nif(x > width - 20) x = 0;\nif(y > height - 20) y = 0; ',
       /**
        * Hide the code block and only display canvas
        *
@@ -153,6 +150,9 @@ Or remove the code editor completely:
        * @type {Boolean}
        * @default false
        */
+      
+      _displaySetupFnPrefix: 'function setup() {\n',
+      _displayDrawFnPrefix: 'function draw() {\n',
       hideEditor: false,
       displaySetupErr: '',
       displayDrawErr: '',
@@ -185,6 +185,11 @@ Or remove the code editor completely:
         this.setupEditor = CodeMirror.fromTextArea(this.$.setupText, codeMirrorSettings);
         this.drawEditor = CodeMirror.fromTextArea(this.$.drawText, codeMirrorSettings);
 
+        //this.setupEditor.reindent();
+        //this.drawEditor.reindent();
+        this.autoFormat(this.setupEditor);
+        this.autoFormat(this.drawEditor);
+
         this.varEditor.on('change', function() {
           this.globalVars = this.varEditor.getValue();
           this._globalVarsChanged.bind(this);
@@ -200,6 +205,24 @@ Or remove the code editor completely:
           this._drawFunctionChanged.bind(this);
         }.bind(this));
 
+
+        this.drawEditor.on('beforeChange',function(cm,change) {
+            //first and last lines are readonly
+            var readOnlyLines = [0, cm.lineCount()-1];
+            if (readOnlyLines.indexOf(change.from.line)>-1 || readOnlyLines.indexOf(change.to.line)>-1 ) {
+                change.cancel();
+            }
+        });        
+
+        this.setupEditor.on('beforeChange',function(cm,change) {
+            //first and last lines are readonly
+            var readOnlyLines = [0, cm.lineCount()-2, cm.lineCount()-1]; //for extra blank line
+            if (readOnlyLines.indexOf(change.from.line)>-1 || readOnlyLines.indexOf(change.to.line)>-1 ) {
+                change.cancel();
+            }
+        });        
+
+
         this.$.github.addEventListener('github-toast', function(e) {
           this._message = e.detail;
           this._dialogMessage = 2;
@@ -210,6 +233,7 @@ Or remove the code editor completely:
         }.bind(this));
 
 
+
       },
 
       _createP5: function() {
@@ -218,7 +242,7 @@ Or remove the code editor completely:
             drawFunc = null;
 
         try {
-          setupFunc = new Function('with (this) {'+self.setupFunction+'}'); 
+          setupFunc = new Function('with (this) {'+self.removeDisplayFn(self.setupFunction, self._displaySetupFnPrefix)+'}'); 
         }
         catch(e) {
           self.setupErr = e.message;//  + ' ' + e.lineNumber;
@@ -228,7 +252,7 @@ Or remove the code editor completely:
 
         try {
 
-          drawFunc = new Function('with (this) {'+self.drawFunction+'}'); 
+          drawFunc = new Function('with (this) {'+self.removeDisplayFn(self.drawFunction, self._displayDrawFnPrefix)+'}'); 
         }
         catch(e) {
           self.drawErr = e.message;// + ' ' + e.lineNumber;
@@ -449,8 +473,34 @@ Or remove the code editor completely:
           }
         });
 
-      }
+      },
 
+      addSetupDisplayFn: function(text) {
+        return this._displaySetupFnPrefix + text + '\n}'; 
+      },
+
+      addDrawDisplayFn: function(text) {
+        return this._displayDrawFnPrefix + text + '\n}'; 
+      },
+
+      removeDisplayFn: function(text, prefix) {
+        var ret;
+        if(text.indexOf(prefix)===0) {
+          ret = text;
+          ret =  ret.substring(prefix.length, ret.length-3);
+        }
+        else {
+          ret = text;
+        }
+        return ret;
+      },
+
+      autoFormat: function(editor) {
+          var totalLines = editor.lineCount();
+          var totalChars = editor.getTextArea().value.length;
+          editor.autoFormatRange({line:0, ch:0}, {line:totalLines, ch:totalChars});
+          editor.setCursor(0);
+      }      
 
 
     });
