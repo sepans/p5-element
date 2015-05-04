@@ -87,7 +87,7 @@ Or remove the code editor completely:
         <textarea value="{{drawFunction | addDrawDisplayFn}}" id="drawText" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
 
         
-        <template repeat="{{function, index in _moreFunctions}}">
+        <template repeat="{{function, index in otherFunctions}}">
 
           <div class="error">{{function.errDisplay}}</div>
           <textarea value="{{function.content | addDisplayFn}}" id="function-{{index}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
@@ -167,14 +167,14 @@ Or remove the code editor completely:
       displayDrawErr: '',
       _codeOpen: true,
       _currentVars: [],
-      _moreFunctions: [],
+      otherFunctions: [],
       observe: {
         setupFunction: '_setupFunctionChanged',
         drawFunction: '_drawFunctionChanged',
         globalVars: '_globalVarsChanged',
         setupErr: 'setupErrChanged',
         drawErr: 'drawErrChanged',
-        //_moreFunctions: 
+        //otherFunctions: 
       },
 
       _codeMirrorSettings: {
@@ -273,22 +273,17 @@ Or remove the code editor completely:
         }
         self.drawErr = '';
 
-        console.log('self._moreFunctions',self._moreFunctions);
+        console.log('self.otherFunctions',self.otherFunctions);
 
-        self._moreFunctions.forEach(function(func) {
+        self.otherFunctions.forEach(function(func) {
 
           try {
-            console.log('func content ',func.content);
-
-            var contentWithoutName = func.content.substring('function newfunction() {\n'.length, func.content.length-3);
-            console.log('contentWithoutName '+contentWithoutName);
-
-            func.parsedFunc = new Function('with (this) {'+contentWithoutName+'}'); 
-            //console.log('anotherFunction', anotherFunction);
+            //TODO: variables?!
+            func.parsedFunc = new Function('with (this) {'+func.body+'}'); 
           }
           catch(e) {
+            //TODO: error handling
             console.log('error ',func.name, e);
-            //self.drawErr = e.message;// + ' ' + e.lineNumber;
             return;
           }
 
@@ -361,9 +356,7 @@ Or remove the code editor completely:
             }
           }.bind(this);
 
-          //console.log('more functions....');
-
-          self._moreFunctions.forEach(function(func) {
+          self.otherFunctions.forEach(function(func) {
             s[func.name] = function() {
   
               try {
@@ -512,29 +505,30 @@ Or remove the code editor completely:
       _addFunction: function() {
 
         var newFunction = {
-          name: 'newfunction',
-          content: 'console.log(",");'
+          name: 'newFunction',
+          content: '\t//add function body here'
         }
 
-        this._moreFunctions.push(newFunction);
+        this.otherFunctions.push(newFunction);
 
-        Polymer.flush();
+        //Polymer.flush();
+        // settimeout to make sure the text area is generated in template section //TODO better implementation?!
         setTimeout(function() {
-          var elId = '#function-'+(this._moreFunctions.length-1).toString();
-          console.log(this._moreFunctions, elId);
-
+          var elId = '#function-'+(this.otherFunctions.length-1).toString();
+          
           newFunction.dom = this.shadowRoot.querySelector(elId);
-          console.log(elId, newFunction.dom);
 
            newFunction.codeEditor = CodeMirror.fromTextArea(newFunction.dom, this._codeMirrorSettings);
 
           newFunction.codeEditor.on('change', function() {
-            console.log('NEW FUNCTION CHANGED');
-            newFunction.content = newFunction.codeEditor.getValue();
-            //console.log('content', newFunction.content);
-            //console.log(this, this._setupFunctionChanged);
+            var boxContent = newFunction.codeEditor.getValue();
+            var tokenized = this.tokenizeFunction(boxContent);
+            newFunction.name = tokenized.name;
+            newFunction.body = tokenized.body;
+            newFunction.variables = tokenized.variables;
 
-            this._setupFunctionChanged();
+            this._createP5();
+
           }.bind(this));
 
 
@@ -590,7 +584,26 @@ Or remove the code editor completely:
           var totalChars = editor.getTextArea().value.length;
           editor.autoFormatRange({line:0, ch:0}, {line:totalLines, ch:totalChars});
           editor.setCursor(0);
-      }      
+      },
+
+      tokenizeFunction: function(code) {
+
+        // regular expression to extract function name and variables 
+        //TODO: the varaible part accepts false possitives (e.g. (ab, a,,b,) ) because of the way , is handled 
+        var regex = /\bfunction\b[\s]*([a-zA-Z_][0-9a-zA-Z_]*)[\s]*\(([a-zA-Z_][0-9a-zA-Z_,\s]*)*\)[\s]*\{/mg;
+
+        var matches = regex.exec(code);
+        var tokenizedFunc = {};
+        if(matches.length>1) {
+          tokenizedFunc.name = matches[1];
+          tokenizedFunc.body = code.substring(matches[0].length, code.lastIndexOf('}')); 
+        } 
+        if(matches.length>2) {
+          tokenizedFunc.variables = matches[2];
+        }
+        return tokenizedFunc;
+
+      }   
 
 
     });
