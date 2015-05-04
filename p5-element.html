@@ -151,7 +151,7 @@ Or remove the code editor completely:
        * @property drawFunction
        * @type {String}
        */
-      drawFunction: 'background(255);\nrect(x, y, 20, 20);\nx++;\ny++;\nif(x > width - 20) x = 0;\nif(y > height - 20) y = 0; ',
+      drawFunction: 'fill(255,5);\nrect(0, 0, width, height);\nrect(x, y, 20, 20);\nx++;\ny++;\nif(x > width - 20) x = 0;\nif(y > height - 20) y = 0; ',
       /**
        * Hide the code block and only display canvas
        *
