@@ -166,8 +166,8 @@ Or remove the code editor completely:
       displaySetupErr: '',
       displayDrawErr: '',
       _codeOpen: true,
-      _currentVars: [],
-      otherFunctions: [],
+      _currentVars: null,
+      otherFunctions: null,
       observe: {
         setupFunction: '_setupFunctionChanged',
         drawFunction: '_drawFunctionChanged',
@@ -181,6 +181,12 @@ Or remove the code editor completely:
         mode:  'javascript',
         lineNumbers: true,
         theme: 'elegant'
+      },
+
+      created: function() {
+        this._currentVars = [];
+        this.otherFunctions = [];
+
       },
 
       ready: function() {
@@ -510,6 +516,7 @@ Or remove the code editor completely:
         }
 
         this.otherFunctions.push(newFunction);
+        console.log('otherFunctions',this.otherFunctions);
 
         //Polymer.flush();
         // settimeout to make sure the text area is generated in template section //TODO better implementation?!
