@@ -256,9 +256,12 @@ Or remove the code editor completely:
       },
 
       _createP5: function() {
+        
         var self = this,
             setupFunc = null,
             drawFunc = null;
+
+        /*
 
         try {
           setupFunc = new Function('with (this) {'+self.removeDisplayFn(self.setupFunction, self._displaySetupFnPrefix)+'}'); 
@@ -295,8 +298,10 @@ Or remove the code editor completely:
 
         });
 
+        */
 
-        var newSketch = this._createSketch(setupFunc, drawFunc);
+
+        var newSketch = this._createSketch();//setupFunc, drawFunc);
         
 
         try {
@@ -316,7 +321,7 @@ Or remove the code editor completely:
 
       },
 
-      _createSketch: function(_setupFunc, _drawFunc) {
+      _createSketch: function() {
 
         var self = this;
         var mysketch = null;
@@ -340,7 +345,8 @@ Or remove the code editor completely:
 
           s.setup = function() {
             try {
-              _setupFunc.call(s);
+              var _setupFunc = new Function('mys', 'with (mys) {'+self.removeDisplayFn(self.setupFunction, self._displaySetupFnPrefix)+'}');
+              _setupFunc(s);
             }
             catch(e) {
               this.setupErr = this._parseError(e);
@@ -352,7 +358,8 @@ Or remove the code editor completely:
 
           s.draw = function() {
             try {
-              _drawFunc.call(s);
+              var _drawFunc = new Function('mys', 'with (mys) {'+self.removeDisplayFn(self.drawFunction, self._displayDrawFnPrefix)+'}'); 
+              _drawFunc(s);
             } catch(e) {
 
               this.drawErr = this._parseError(e);
@@ -366,7 +373,8 @@ Or remove the code editor completely:
             s[func.name] = function() {
   
               try {
-                func.parsedFunc.call(s);
+                var parsedFunc = new Function('mys', 'with (mys) {'+func.body+'}');
+                return parsedFunc(s);
               } catch(e) {
                 console.log('error', e);
               }
