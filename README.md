@@ -24,7 +24,7 @@ Simply use html tags in your code. It will render the editor with the canvas.
 
     <p5-element></p5-element>
 
-Since the element encapsulates p5.js functions you can have multiple elements in the same page and run them side by side.
+Since the element encapsulates p5.js functions and runs in instance mode, you can have multiple elements in the same page and run them side by side.
 
 ![screenshot](preview.png)
 
