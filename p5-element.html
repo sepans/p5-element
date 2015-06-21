@@ -90,7 +90,7 @@ Or remove the code editor completely:
         <template repeat="{{function, index in otherFunctions}}">
 
           <div class="error">{{function.errDisplay}}</div>
-          <textarea value="{{function.content | addDisplayFn}}" id="function-{{index}}" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
+          <textarea value="{{function.content | addDisplayFn}}" id="function-{{index}}" class="other-function code" placeholder="enter draw function" rows="4">></textarea>
         </template>
 
         <button class="btn" on-click="{{_addFunction}}">add function</button>
@@ -168,6 +168,7 @@ Or remove the code editor completely:
       _codeOpen: true,
       _currentVars: null,
       otherFunctions: null,
+      newFunctionCounter: 0,
       observe: {
         setupFunction: '_setupFunctionChanged',
         drawFunction: '_drawFunctionChanged',
@@ -301,7 +302,7 @@ Or remove the code editor completely:
         */
 
 
-        var newSketch = this._createSketch();//setupFunc, drawFunc);
+        var newSketch = this._createSketch();
         
 
         try {
@@ -519,7 +520,7 @@ Or remove the code editor completely:
       _addFunction: function() {
 
         var newFunction = {
-          name: 'newFunction',
+          name: 'newFunction' + this.newFunctionCounter++,
           content: '\t//add function body here'
         }
 
@@ -533,7 +534,7 @@ Or remove the code editor completely:
           
           newFunction.dom = this.shadowRoot.querySelector(elId);
 
-           newFunction.codeEditor = CodeMirror.fromTextArea(newFunction.dom, this._codeMirrorSettings);
+          newFunction.codeEditor = CodeMirror.fromTextArea(newFunction.dom, this._codeMirrorSettings);
 
           newFunction.codeEditor.on('change', function() {
             var boxContent = newFunction.codeEditor.getValue();
@@ -543,6 +544,9 @@ Or remove the code editor completely:
             newFunction.variables = tokenized.variables;
 
             this._createP5();
+
+            //newFunction.dom.style.height = 'auto';
+            //newFunction.dom.style.opacity = 1;
 
           }.bind(this));
 
@@ -575,7 +579,7 @@ Or remove the code editor completely:
       },
 
       addDisplayFn: function(text) {
-        return 'function newfunction() {\n' + text + '\n}'; 
+        return 'function newfunction'+this.newFunctionCounter+'() {\n' + text + '\n}'; 
       },
 
       addDrawDisplayFn: function(text) {
