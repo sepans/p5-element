@@ -1,0 +1,114 @@
+:host {
+  display: inline-block;
+  color: red;
+  font-family: arial;
+  font-size: 12px;
+  padding: 10px;
+  min-width: 300px;
+}
+
+#canvas_container {
+	position: relative;
+}
+
+#defaultCanvas {
+	position: absolute;
+	top: 0;
+	left: 0;
+	border: 1px solid #F6D7E0;
+	margin-left: 10px;
+	display: block;
+
+
+}
+
+.btn {
+	border: 1px solid #ED225D;
+	color: #ED225D;
+	border-radius: 0;
+	background-color: #FFF;
+	float: right;
+	cursor: pointer;
+}
+
+#dialog  a {
+	color: #333;
+}
+
+#dialog  a.btn {
+	color: #333;
+	border: 1px solid #333;
+	padding: 3px;
+	margin-right: 20px;
+}
+
+
+#canvas {
+	border: 1px solid #EEE;
+}
+
+.error {
+	color: red;
+	font-size: 12px;
+	height: 15px;
+}
+
+.code {
+
+  font-family: monaco monospace 'courier' 'courier new'  ;
+  font-size: 12px;
+  color: #333;
+
+}
+
+textarea.code {
+	border: 1px solid #eaeaea;
+	width: 300px;
+  	height: 150px;
+	outline: none !important;
+	margin-left: 10px;
+	resize: both;
+
+}
+
+.CodeMirror {
+	height: auto !important;
+}
+
+textarea.vars {
+	height: 1.5em;
+}
+
+label {
+	margin: 10px 0;
+	display: inline-block;
+}
+
+.code-label {
+	cursor: pointer;
+}
+
+.code-label::before {
+	content: '+';
+	margin-right: 5px;
+	width: 5px;
+	display: inline-block;
+}
+
+.open::before {
+	content: '-';
+
+}
+
+.code-label {
+	width: 100%;
+	display: block;
+}
+
+.other-function {
+	display: none;
+}
+
+
+
+

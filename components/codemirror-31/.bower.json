@@ -1,0 +1,13 @@
+{
+  "name": "codemirror-31",
+  "homepage": "https://github.com/codemirror/codemirror",
+  "_release": "v3.1",
+  "_resolution": {
+    "type": "tag",
+    "tag": "v3.1",
+    "commit": "545aeb74f6800dcaf6acead1bfc14c4eef99c9eb"
+  },
+  "_source": "git://github.com/codemirror/codemirror.git",
+  "_target": "v3.1",
+  "_originalSource": "codemirror/codemirror"
+}

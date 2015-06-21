@@ -1,0 +1,632 @@
+<link rel="import" href="../polymer/polymer.html">
+<link rel="import" href="../core-collapse/core-collapse.html">
+<link rel="import" href="../paper-dialog/paper-dialog.html">
+
+<link rel="import" href="../github-elements/github-elements.html">
+
+
+<!--
+An editor component for p5.js live coding. It also provides encapsulation so you can run different sketches side by side.
+
+#### Installation:
+
+The easiest way to install the component in your page is by using bower because it also handles dipendencies:
+
+    bower install p5-element
+
+(But you can also download the code from github and put the files in your project directory. Make sure you 
+do the same for the dependencies in the bower.json file)
+
+Include the component and webcomponentjs on top of your page:
+
+    <script src="bower_components/webcomponentsjs/webcomponents.js"></script>
+
+    <link rel="import" href="bower_components/p5-element/p5-element.html">
+
+#### Usage:
+
+Simply use html tags in your code. It will render the editor with the canvas.
+
+    <p5-element></p5-element>
+
+You can preset the setup/draw function as well as the global variables using element attributes:
+
+    <p5-element globalVars="x=10, y=15" setupFunction="createCanvas(500,500);"></p5-element>
+
+But it might be easier to set them using javascript (to easily handle line breaks etc.):
+
+    <p5-element id="p5js"></p5-element>
+
+    <script>
+     
+      var p5jsElement = document.querySelector('#p5js');
+      p5jsElement.drawFunction = " background(255); \n ellipse(10,10,10,10);"
+
+    </script>
+
+Or remove the code editor completely:
+
+    <p5-element hideEditor="true"></p5-element>
+
+
+
+
+
+@element p5-element
+@blurb An editor for p5.js live coding
+@version 0.0.1
+@status alpha
+@homepage http://sepans.github.io/p5-element
+-->
+<polymer-element name="p5-element" attributes="setupFunction drawFunction globalVars hideEditor">
+
+  <template>
+
+    <link rel="stylesheet" href="p5-element.css">
+    <link rel="stylesheet" href="../codemirror/lib/codemirror.css">
+    <link rel="stylesheet" href="../codemirror/theme/elegant.css">
+
+
+    <template if="{{!hideEditor}}">
+      <github-element id="github"></github-element>
+
+      <label class="code-label {{ {open: _codeOpen } | tokenList }}" on-click="{{toggleCodeSection}}">code:</label>  
+
+
+      <core-collapse opened="true" id="code_collapse">
+
+        <button class="btn" on-click="{{_gistLogin}}">save as gist</button>
+        <div class="code">var </div>
+        <textarea value="{{globalVars}}" id="varText" class="setup-function code vars" placeholder="" rows="2">></textarea>
+        <div class="code">;</div>
+        <div class="error setupErr">{{displaySetupErr}}</div>
+        <textarea value="{{setupFunction | addSetupDisplayFn}}" id="setupText" class="setup-function code" placeholder="enter setup function" rows="4">></textarea>
+        <div id="setup2"></div>
+
+        <div class="error drawErr">{{displayDrawErr}}</div>
+        <textarea value="{{drawFunction | addDrawDisplayFn}}" id="drawText" class="draw-function code" placeholder="enter draw function" rows="4">></textarea>
+
+        
+        <template repeat="{{function, index in otherFunctions}}">
+
+          <div class="error">{{function.errDisplay}}</div>
+          <textarea value="{{function.content | addDisplayFn}}" id="function-{{index}}" class="other-function code" placeholder="enter draw function" rows="4">></textarea>
+        </template>
+
+        <button class="btn" on-click="{{_addFunction}}">add function</button>
+
+      </core-collapse>
+
+      <paper-dialog id="dialog">
+        <template if="{{_dialogMessage===1}}">
+          <p>Do you want to publish gist under your account using a github token or post it anonimously?</p>
+          <a href="#" style="margin-right: 50%" on-click="{{_loginGist}}">Using Github Token</a>
+          <a href="#" style="btn" on-click="{{_saveGist}}">Anonymous</a>
+
+        </template>
+        <div id="dialogmsg">
+
+        </div>
+        
+      </paper-dialog>
+
+    </template>
+
+    <template if="{{!hideEditor}}">
+      <label>canvas:</label>   
+    </template>
+     <div id="canvas_container"></div>
+
+    
+
+  </template>
+  <script src="../p5js/lib/p5.js"></script>
+  <script src="../codemirror/lib/codemirror.js"></script>
+  <script src="../codemirror/mode/javascript/javascript.js"></script>
+  <script src="../codemirror-31/addon/format/formatting.js"></script>
+
+  <script>
+
+    Polymer('p5-element', {
+     
+      _p5: null,
+      //_sketch: {},
+      /**
+       * Global variables, seperated by comma.
+       * 
+       * @property globalVars
+       * @type {String}
+       */
+      globalVars: 'x= 15,\ny = 15',
+      /**
+       * Setup function for the p5.js component
+       *
+       * @property setupFunction
+       * @type {String}
+       */
+      setupFunction: 'createCanvas(300, 200);',
+      /**
+       * Draw function for the p5.js component
+       *
+       * @property drawFunction
+       * @type {String}
+       */
+      drawFunction: 'fill(255,5);\nrect(-1, -1, width+1, height+1);\nrect(x, y, 20, 20);\nx++;\ny++;\nif(x > width - 20) x = 0;\nif(y > height - 20) y = 0; ',
+      /**
+       * Hide the code block and only display canvas
+       *
+       * @property hideEditor
+       * @type {Boolean}
+       * @default false
+       */
+      
+      _displaySetupFnPrefix: 'function setup() {\n',
+      _displayDrawFnPrefix: 'function draw() {\n',
+      hideEditor: false,
+      displaySetupErr: '',
+      displayDrawErr: '',
+      _codeOpen: true,
+      _currentVars: null,
+      otherFunctions: null,
+      newFunctionCounter: 0,
+      observe: {
+        setupFunction: '_setupFunctionChanged',
+        drawFunction: '_drawFunctionChanged',
+        globalVars: '_globalVarsChanged',
+        setupErr: 'setupErrChanged',
+        drawErr: 'drawErrChanged',
+        //otherFunctions: 
+      },
+
+      _codeMirrorSettings: {
+        mode:  'javascript',
+        lineNumbers: true,
+        theme: 'elegant'
+      },
+
+      created: function() {
+        this._currentVars = [];
+        this.otherFunctions = [];
+
+      },
+
+      ready: function() {
+        
+       var self = this;
+       //globalVarsChanged method calls createP5 function in the end.
+       self._globalVarsChanged();
+
+      },
+
+      domReady: function() {
+
+        //setting up editors
+        this.varEditor = CodeMirror.fromTextArea(this.$.varText, this._codeMirrorSettings);
+        this.setupEditor = CodeMirror.fromTextArea(this.$.setupText, this._codeMirrorSettings);
+        this.drawEditor = CodeMirror.fromTextArea(this.$.drawText, this._codeMirrorSettings);
+
+        //this.setupEditor.reindent();
+        //this.drawEditor.reindent();
+        this.autoFormat(this.setupEditor);
+        this.autoFormat(this.drawEditor);
+
+        this.varEditor.on('change', function() {
+          this.globalVars = this.varEditor.getValue();
+          this._globalVarsChanged.bind(this);
+        }.bind(this));
+
+        this.setupEditor.on('change', function() {
+          this.setupFunction = this.setupEditor.getValue();
+          //this._setupFunctionChanged.bind(this);
+        }.bind(this));
+
+        this.drawEditor.on('change', function() {
+          this.drawFunction = this.drawEditor.getValue();
+          //this._drawFunctionChanged.bind(this);
+        }.bind(this));
+
+
+        this.drawEditor.on('beforeChange',function(cm,change) {
+            //first and last lines are readonly
+            var readOnlyLines = [0, cm.lineCount()-1];
+            if (readOnlyLines.indexOf(change.from.line)>-1 || readOnlyLines.indexOf(change.to.line)>-1 ) {
+                change.cancel();
+            }
+        });        
+
+        this.setupEditor.on('beforeChange',function(cm,change) {
+            //first and last lines are readonly
+            var readOnlyLines = [0, cm.lineCount()-2, cm.lineCount()-1]; //for extra blank line
+            if (readOnlyLines.indexOf(change.from.line)>-1 || readOnlyLines.indexOf(change.to.line)>-1 ) {
+                change.cancel();
+            }
+        });        
+
+
+        this.$.github.addEventListener('github-toast', function(e) {
+          this._message = e.detail;
+          this._dialogMessage = 2;
+          this.$.dialogmsg.innerHTML = e.detail;
+          this.$.dialogmsg.querySelector('a').setAttribute('target', '_blank');
+          this.$.dialog.open();
+
+        }.bind(this));
+
+
+
+      },
+
+      _createP5: function() {
+        
+        var self = this,
+            setupFunc = null,
+            drawFunc = null;
+
+        /*
+
+        try {
+          setupFunc = new Function('with (this) {'+self.removeDisplayFn(self.setupFunction, self._displaySetupFnPrefix)+'}'); 
+        }
+        catch(e) {
+          self.setupErr = e.message;//  + ' ' + e.lineNumber;
+          return;
+        }
+        self.setupErr = '';
+
+        try {
+
+          drawFunc = new Function('with (this) {'+self.removeDisplayFn(self.drawFunction, self._displayDrawFnPrefix)+'}'); 
+        }
+        catch(e) {
+          self.drawErr = e.message;// + ' ' + e.lineNumber;
+          return;
+        }
+        self.drawErr = '';
+
+        console.log('self.otherFunctions',self.otherFunctions);
+
+        self.otherFunctions.forEach(function(func) {
+
+          try {
+            //TODO: variables?!
+            func.parsedFunc = new Function('with (this) {'+func.body+'}'); 
+          }
+          catch(e) {
+            //TODO: error handling
+            console.log('error ',func.name, e);
+            return;
+          }
+
+        });
+
+        */
+
+
+        var newSketch = this._createSketch();
+        
+
+        try {
+            self._p5 = new p5(newSketch, self.$.canvas_container); 
+            self._sketch = newSketch;
+            self._cleanUp();
+        }
+        catch(e) {
+          console.log('!!!! error deleting p5');
+          console.log(e.message);
+          self.drawErr = e.message;// + ' ' + e.lineNumber;
+          self._p5.remove();
+          self._cleanUp();
+          return;
+        }
+
+
+      },
+
+      _createSketch: function() {
+
+        var self = this;
+        var mysketch = null;
+
+        // if self._sketch exists backup the globar vars
+        if(self._sketch) {
+
+          self._globalVarsParsed.forEach(function(item) {
+            self._currentVars[item.name] = self.getVarValue(item.name);
+          });
+        }
+
+
+
+        mysketch = function(s) {
+
+          // set global vars to backed up values if exist, otherwise initial values          
+          this._globalVarsParsed.forEach(function(item) {
+            s[item.name] =  this._currentVars[item.name] ? this._currentVars[item.name]  : item.value;
+          }.bind(this));
+
+          s.setup = function() {
+            try {
+              var _setupFunc = new Function('mys', 'with (mys) {'+self.removeDisplayFn(self.setupFunction, self._displaySetupFnPrefix)+'}');
+              _setupFunc(s);
+            }
+            catch(e) {
+              this.setupErr = this._parseError(e);
+
+              this._p5.noLoop();
+
+            }
+          }.bind(this);
+
+          s.draw = function() {
+            try {
+              var _drawFunc = new Function('mys', 'with (mys) {'+self.removeDisplayFn(self.drawFunction, self._displayDrawFnPrefix)+'}'); 
+              _drawFunc(s);
+            } catch(e) {
+
+              this.drawErr = this._parseError(e);
+
+              this._p5.noLoop();
+
+            }
+          }.bind(this);
+
+          self.otherFunctions.forEach(function(func) {
+            s[func.name] = function() {
+  
+              try {
+                var parsedFunc = new Function('mys', 'with (mys) {'+func.body+'}');
+                return parsedFunc(s);
+              } catch(e) {
+                console.log('error', e);
+              }
+
+            }
+
+          });
+
+
+          this.getVarValue = function(varName) {
+             return s[varName];
+          }
+          
+
+        }.bind(this);
+
+        //console.log('mysketch', mysketch);
+
+
+        return mysketch;
+      },
+      
+      _setupFunctionChanged: function() {
+
+        this._createP5();
+
+      },
+
+      _drawFunctionChanged: function() {
+
+        this._createP5();
+
+      },
+      setupErrChanged: function(e) {
+
+        var self = this;
+
+        if(self.setupErr.length==0) {
+          self.displaySetupErr = '';
+          return;
+
+        }
+
+        clearTimeout(self._setupTimeOut);
+        self._setupTimeOut = setTimeout(function() {
+          if(self.setupErr.length>0) {
+            self.displaySetupErr = self.setupErr;
+          }
+
+        }, 1000);
+      },
+
+      drawErrChanged: function(e) {
+        
+        var self = this;
+
+        if(self.drawErr.length==0) {
+          self.displayDrawErr = '';
+
+          return;
+
+        }
+
+        clearTimeout(self._drawTimeOut);
+        self._drawTimeOut = setTimeout(function() {
+          if(self.drawErr.length>0) {
+            self.displayDrawErr = self.drawErr;
+          }
+
+        }, 1000);
+      },
+
+      _globalVarsChanged: function() {
+        var self = this;
+        self._globalVarsParsed = [];
+        
+        // reset currentVars //TODO make it smarter!
+        self._currentVars = [];
+        self._sketch = null;
+
+        var varList = self.globalVars.split(',');
+        self._globalVarsParsed = varList.map(function(item) {
+          var splits = item.split('=');
+          var value = splits.length>1 ? splits[1] : null;
+          var parsedValue = (!isNaN(parseFloat(value)) && isFinite(value)) ? parseFloat(value) : value;
+          return {
+            name: splits[0].trim(),
+            value: parsedValue
+          }
+
+        });
+
+        self._createP5();
+      },
+      /**
+       * Open/Close the code section 
+       */
+      toggleCodeSection: function() {
+        this._codeOpen = !this._codeOpen;
+        this.$.code_collapse.toggle();
+      },
+
+      // remove any extra canvases
+      _cleanUp: function() {
+        var self = this;
+
+        // this shouldn't be necessary, but sometimes it is...
+        for (var j = 0; j < self.$.canvas_container.children.length - 1; j++) {
+          self.$.canvas_container.children[j].remove();
+        }
+      },
+
+      // returns the error message and line number
+      _parseError: function(e) {
+        if (typeof(e) !== 'undefined' && typeof(e.stack) !== 'undefined') {
+          var lStart = e.stack.indexOf('<anonymous>:') + 12;
+          var errLine = '. Line: ' + e.stack.substr(lStart, 7).split(')')[0];
+          return e.message + errLine;
+        }
+      },
+
+      _gistLogin: function() {
+        this._dialogMessage = 1;
+        this.$.dialogmsg.innerHTML = '';
+        this.$.dialog.open();
+
+      },
+
+      _loginGist: function() {
+
+        this.$.dialog.close();
+
+        if(!this.$.github.token) {
+          this.$.github.signIn();
+        }
+        else {
+          this._saveGist(true);
+        }
+
+      },
+
+      _addFunction: function() {
+
+        var newFunction = {
+          name: 'newFunction' + this.newFunctionCounter++,
+          content: '\t//add function body here'
+        }
+
+        this.otherFunctions.push(newFunction);
+        console.log('otherFunctions',this.otherFunctions);
+
+        //Polymer.flush();
+        // settimeout to make sure the text area is generated in template section //TODO better implementation?!
+        setTimeout(function() {
+          var elId = '#function-'+(this.otherFunctions.length-1).toString();
+          
+          newFunction.dom = this.shadowRoot.querySelector(elId);
+
+          newFunction.codeEditor = CodeMirror.fromTextArea(newFunction.dom, this._codeMirrorSettings);
+
+          newFunction.codeEditor.on('change', function() {
+            var boxContent = newFunction.codeEditor.getValue();
+            var tokenized = this.tokenizeFunction(boxContent);
+            newFunction.name = tokenized.name;
+            newFunction.body = tokenized.body;
+            newFunction.variables = tokenized.variables;
+
+            this._createP5();
+
+            //newFunction.dom.style.height = 'auto';
+            //newFunction.dom.style.opacity = 1;
+
+          }.bind(this));
+
+
+        }.bind(this),200);
+
+
+        
+        //this._createP5();
+
+      },
+
+      _saveGist: function(loggedIn) {
+        var gistContent = 'var ' +
+            this.varEditor.getValue() + ';\n\n' +
+            this.setupEditor.getValue() + '\n\n' +
+            this.drawEditor.getValue() + '\n\n';
+
+
+        this.$.github.save('p5-element code', true, {
+          'p5.js': {
+            content: gistContent
+          }
+        });
+
+      },
+
+      addSetupDisplayFn: function(text) {
+        return this._displaySetupFnPrefix + text + '\n}'; 
+      },
+
+      addDisplayFn: function(text) {
+        return 'function newfunction'+this.newFunctionCounter+'() {\n' + text + '\n}'; 
+      },
+
+      addDrawDisplayFn: function(text) {
+        return this._displayDrawFnPrefix + text + '\n}'; 
+      },
+
+      removeDisplayFn: function(text, prefix) {
+        var ret;
+        if(text.indexOf(prefix)===0) {
+          ret = text;
+          ret =  ret.substring(prefix.length, ret.length-3);
+        }
+        else {
+          ret = text;
+        }
+        return ret;
+      },
+
+      autoFormat: function(editor) {
+          var totalLines = editor.lineCount();
+          var totalChars = editor.getTextArea().value.length;
+          editor.autoFormatRange({line:0, ch:0}, {line:totalLines, ch:totalChars});
+          editor.setCursor(0);
+      },
+
+      tokenizeFunction: function(code) {
+
+        // regular expression to extract function name and variables 
+        //TODO: the varaible part accepts false possitives (e.g. (ab, a,,b,) ) because of the way , is handled 
+        var regex = /\bfunction\b[\s]*([a-zA-Z_][0-9a-zA-Z_]*)[\s]*\(([a-zA-Z_][0-9a-zA-Z_,\s]*)*\)[\s]*\{/mg;
+
+        var matches = regex.exec(code);
+        var tokenizedFunc = {};
+        if(matches.length>1) {
+          tokenizedFunc.name = matches[1];
+          tokenizedFunc.body = code.substring(matches[0].length, code.lastIndexOf('}')); 
+        } 
+        if(matches.length>2) {
+          tokenizedFunc.variables = matches[2];
+        }
+        return tokenizedFunc;
+
+      }   
+
+
+    });
+
+  </script>
+
+</polymer-element>

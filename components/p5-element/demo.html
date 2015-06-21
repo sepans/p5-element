@@ -1,0 +1,53 @@
+<!doctype html>
+<html>
+<head>
+  <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1.0, user-scalable=yes">
+  <script src="../webcomponentsjs/webcomponents.js"></script>
+  <title>p5-element Demo</title>
+
+  <link rel="import" href="p5-element.html">
+  <style>
+  	body {
+  		font-family: arial;
+  		font-size: 14px;
+  	}
+
+    p5-element {
+      vertical-align: top;
+      min-width: 350px;
+    }
+    .github {
+     
+    }
+  </style>
+
+</head>
+<body unresolved>
+
+
+  <p>
+    Simple Polymer element for p5.js live coding. It allows multiple instances of p5.js run side by side. <br> Add it to any html page with literally 3 lines of code: <a href="http://sepans.github.io/p5-element/components/p5-element/" target="_blank">Documentation</a> - <a href="https://github.com/sepans/p5-element" target="_blank">Source code</a>
+  </p>
+
+  <div class="github">
+    <a class="github-button" href="https://github.com/sepans/p5-element/fork" data-icon="octicon-git-branch" data-count-href="/sepans/p5-element/network" data-count-api="/repos/sepans/p5-element#forks_count" data-count-aria-label="# forks on GitHub" aria-label="Fork sepans/p5-element on GitHub">Fork</a>
+    <a class="github-button" href="https://github.com/sepans/p5-element" data-icon="octicon-star" data-count-href="/sepans/p5-element/stargazers" data-count-api="/repos/sepans/p5-element#stargazers_count" data-count-aria-label="# stargazers on GitHub" aria-label="Star sepans/p5-element on GitHub">Star</a>
+  </div>
+
+  <p5-element></p5-element>
+
+  <p5-element id="second"></p5-element>
+  
+
+  <script>
+    var secondInstance = document.querySelector('#second');
+
+    secondInstance.globalVars = "x=100,\ny=100,\nspeedX = 1,\nspeedY = 1";
+
+    secondInstance.drawFunction = "background(255);\nellipse(x, y, 10, 10);\nx+=speedX;\ny+=speedY;\nif(x>width - 5 || x < 5) speedX = -speedX;\nif(y > height - 5 || y < 5) speedY = -speedY;";
+  </script>
+
+  <script async defer id="github-bjs" src="https://buttons.github.io/buttons.js"></script>
+
+</body>
+</html>
